@@ -9,7 +9,9 @@
 <meta name="apple-mobile-web-app-title" content="Life RPG">
 <title>Life RPG</title>
 <link rel="manifest" href="manifest.json">
-<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700;800;900&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
 /* ===== DESIGN SYSTEM ===== */
 :root {
@@ -47,8 +49,8 @@
   --radius-sm: 10px;
   --radius-xs: 6px;
 
-  --font-head: 'Syne', 'Be Vietnam Pro', sans-serif;
-  --font-body: 'Be Vietnam Pro', sans-serif;
+  --font-head: 'Syne', 'Be Vietnam Pro', 'Segoe UI', sans-serif;
+  --font-body: 'Be Vietnam Pro', 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -411,6 +413,10 @@ html, body {
 .pop { animation:pop .3s; }
 .shake { animation:shake .4s; }
 
+/* ===== ADMIN TABS ===== */
+.admin-tab { display:none; }
+.admin-tab.active { display:block; }
+
 /* ===== MOBILE SAFE AREA ===== */
 @supports(padding: max(0px)) {
   .tabs { padding-bottom: max(0px, env(safe-area-inset-bottom)); }
@@ -602,62 +608,200 @@ html, body {
 
     <!-- ADMIN PAGE -->
     <div class="page" id="page-admin">
-      <!-- Google Sheets config -->
-      <div class="card" id="sheetsConfig">
-        <div class="card-title"><span class="dot" style="background:var(--green)"></span>☁️ Google Sheets Sync</div>
-        <div class="config-banner">
-          <strong>⚡ Cài đặt lần đầu:</strong>
-          Paste URL của Google Apps Script Web App vào đây. Xem file <code>AppsScript_Code.gs</code> để hướng dẫn deploy.
-          <div class="config-input-row">
-            <input type="text" id="sheetsUrl" placeholder="https://script.google.com/macros/s/..." oninput="checkSheetsUrl()">
-            <button onclick="saveSheetsUrl()">Lưu</button>
+
+      <!-- Admin sub-tabs -->
+      <div class="qtab-row" style="margin-bottom:14px">
+        <button class="qtab active" onclick="switchAdminTab('sync',this)">☁️ Sync</button>
+        <button class="qtab" onclick="switchAdminTab('player',this)">👤 Nhân vật</button>
+        <button class="qtab" onclick="switchAdminTab('boss',this)">🐉 Boss</button>
+        <button class="qtab" onclick="switchAdminTab('grad',this)">🎓 Tốt nghiệp</button>
+        <button class="qtab" onclick="switchAdminTab('skills',this)">📚 Skills</button>
+        <button class="qtab" onclick="switchAdminTab('funds',this)">💰 Quỹ</button>
+        <button class="qtab" onclick="switchAdminTab('rules',this)">⚖️ Luật</button>
+        <button class="qtab" onclick="switchAdminTab('danger',this)">⚠️ Danger</button>
+      </div>
+
+      <!-- SYNC TAB -->
+      <div class="admin-tab active" id="atab-sync">
+        <div class="card">
+          <div class="card-title"><span class="dot" style="background:var(--green)"></span>☁️ Google Sheets Sync</div>
+          <div class="config-banner">
+            <strong>⚡ Paste URL Apps Script Web App:</strong>
+            Sau khi deploy Apps Script, copy URL và paste vào đây. URL chỉ lưu trong trình duyệt, không lên GitHub.
+            <div class="config-input-row">
+              <input type="text" id="sheetsUrl" placeholder="https://script.google.com/macros/s/..." oninput="checkSheetsUrl()">
+              <button onclick="saveSheetsUrl()">Lưu</button>
+            </div>
+            <div style="margin-top:6px;font-size:0.65rem" id="urlStatus"></div>
           </div>
-          <div style="margin-top:6px;font-size:0.65rem" id="urlStatus"></div>
+          <button class="admin-btn admin-btn-primary" onclick="syncToSheets()">☁️ Sync lên Sheets ngay</button>
+          <button class="admin-btn" style="background:var(--sky);color:var(--primary);border:1.5px solid var(--border);margin-top:8px" onclick="loadFromSheets()">📥 Load từ Sheets về</button>
         </div>
-        <button class="admin-btn admin-btn-primary" onclick="syncToSheets()">☁️ Sync ngay</button>
-        <button class="admin-btn" style="background:var(--sky);color:var(--primary);border:1.5px solid var(--border);margin-top:8px" onclick="loadFromSheets()">📥 Load từ Sheets</button>
+        <div class="card">
+          <div class="card-title"><span class="dot" style="background:var(--blue)"></span>💾 Backup / Restore JSON</div>
+          <button class="admin-btn admin-btn-primary" onclick="exportJSON()">📤 Export toàn bộ dữ liệu</button>
+          <button class="admin-btn" style="background:var(--sky);color:var(--text);border:1.5px solid var(--border);margin-top:8px" onclick="document.getElementById('importFile').click()">📥 Import từ file JSON</button>
+          <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot"></span>📊 Thống kê</div>
+          <div id="adminStats"></div>
+        </div>
       </div>
 
-      <!-- Import/Export JSON fallback -->
-      <div class="card">
-        <div class="card-title"><span class="dot" style="background:var(--blue)"></span>💾 Backup / Restore</div>
-        <button class="admin-btn admin-btn-primary" onclick="exportJSON()">📤 Export JSON</button>
-        <button class="admin-btn" style="background:var(--sky);color:var(--text);border:1.5px solid var(--border);margin-top:8px" onclick="document.getElementById('importFile').click()">📥 Import JSON</button>
-        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
-      </div>
-
-      <!-- Game Rules -->
-      <div class="card">
-        <div class="card-title"><span class="dot" style="background:var(--orange)"></span>⚖️ Luật chơi & Thưởng/Phạt</div>
-        <div id="rulesList"></div>
-        <div class="admin-section" style="margin-top:16px">
+      <!-- PLAYER TAB -->
+      <div class="admin-tab" id="atab-player">
+        <div class="card">
+          <div class="card-title"><span class="dot"></span>👤 Thông tin nhân vật</div>
           <div class="admin-form">
+            <label>Tên nhân vật</label>
+            <input type="text" id="ap_name" placeholder="Dev Hero">
+            <label>Level hiện tại</label>
+            <input type="number" id="ap_level" min="1">
+            <label>XP hiện tại</label>
+            <input type="number" id="ap_xp" min="0">
+            <label>Streak (ngày)</label>
+            <input type="number" id="ap_streak" min="0">
+            <button class="admin-btn admin-btn-primary" onclick="savePlayerInfo()">💾 Lưu thông tin</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot" style="background:var(--orange)"></span>📊 Resources</div>
+          <div class="admin-form">
+            <label>❤️ HP (0–100)</label>
+            <input type="number" id="ap_hp" min="0" max="100">
+            <label>⚡ Energy (0–100)</label>
+            <input type="number" id="ap_en" min="0" max="100">
+            <label>💰 Số dư tiền (VND)</label>
+            <input type="number" id="ap_mon" min="0" step="100000">
+            <label>⏰ Free time (giờ/ngày)</label>
+            <input type="number" id="ap_time" min="0" max="24" step="0.5">
+            <button class="admin-btn admin-btn-primary" onclick="savePlayerResources()">💾 Lưu resources</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOSS TAB -->
+      <div class="admin-tab" id="atab-boss">
+        <div class="card">
+          <div class="card-title"><span class="dot" style="background:var(--primary)"></span>🐉 Chỉnh sửa Boss tuần</div>
+          <div class="admin-form">
+            <label>Tên Boss</label>
+            <input type="text" id="ab_name" placeholder="Tuần này: Đồ Án Boss">
+            <label>Danh sách tasks (mỗi dòng 1 task)</label>
+            <textarea id="ab_tasks" style="height:140px" placeholder="Gặp GVHD&#10;Viết 2 trang mới&#10;Review code intern&#10;Đọc 1 paper&#10;Lên kế hoạch tuần sau"></textarea>
+            <button class="admin-btn admin-btn-primary" onclick="saveBoss()">💾 Lưu Boss</button>
+            <button class="admin-btn" style="background:var(--sky);color:var(--primary);border:1.5px solid var(--border);margin-top:8px" onclick="resetBoss()">🔄 Reset Boss (tuần mới)</button>
+          </div>
+        </div>
+        <div class="card" style="background:linear-gradient(135deg,#1E1B4B,#312E81);border:none">
+          <div style="color:rgba(255,255,255,.6);font-size:0.65rem;font-weight:700;letter-spacing:1px;margin-bottom:8px">PREVIEW</div>
+          <div id="bossPreview" style="color:#fff"></div>
+        </div>
+      </div>
+
+      <!-- GRAD TAB -->
+      <div class="admin-tab" id="atab-grad">
+        <div class="card">
+          <div class="card-title"><span class="dot" style="background:var(--gold)"></span>🎓 Graduation Checklist</div>
+          <div id="adminGradList"></div>
+          <div class="admin-form" style="margin-top:12px">
+            <label>Thêm mục mới</label>
+            <div style="display:flex;gap:8px">
+              <input type="text" id="ag_new" placeholder="Ví dụ: Nộp đơn xét tốt nghiệp" style="flex:1">
+              <button style="padding:8px 14px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-family:var(--font-body);font-weight:700;font-size:0.75rem;cursor:pointer;white-space:nowrap" onclick="addGradItem()">+ Thêm</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SKILLS TAB -->
+      <div class="admin-tab" id="atab-skills">
+        <div class="card">
+          <div class="card-title"><span class="dot" style="background:var(--blue)"></span>📚 Quản lý Skills</div>
+          <div id="adminSkillList"></div>
+          <div class="admin-form" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+            <div style="font-size:0.72rem;font-weight:700;color:var(--text2);margin-bottom:8px">➕ Thêm Skill mới</div>
+            <label>Tên skill</label>
+            <input type="text" id="ask_name" placeholder="Ví dụ: DevOps">
+            <label>Icon (emoji)</label>
+            <input type="text" id="ask_icon" placeholder="🚀" maxlength="2">
+            <label>Màu chính (hex)</label>
+            <input type="color" id="ask_color" value="#6C63FF" style="height:38px;padding:2px 6px">
+            <button class="admin-btn admin-btn-primary" onclick="addSkill()">+ Thêm Skill</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- FUNDS TAB -->
+      <div class="admin-tab" id="atab-funds">
+        <div class="card">
+          <div class="card-title"><span class="dot" style="background:var(--green)"></span>💰 Quản lý Quỹ tài chính</div>
+          <div id="adminFundList"></div>
+          <div class="admin-form" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+            <div style="font-size:0.72rem;font-weight:700;color:var(--text2);margin-bottom:8px">➕ Thêm Quỹ mới</div>
+            <label>Tên quỹ (có thể dùng emoji)</label>
+            <input type="text" id="afu_name" placeholder="🎯 Quỹ mua laptop">
+            <label>Mục tiêu (VND)</label>
+            <input type="number" id="afu_target" placeholder="20000000" step="500000">
+            <label>Ghi chú</label>
+            <input type="text" id="afu_note" placeholder="Mua laptop mới để code">
+            <button class="admin-btn admin-btn-primary" onclick="addFund()">+ Thêm Quỹ</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot" style="background:var(--teal)"></span>Monthly Budget</div>
+          <div class="admin-form">
+            <label>Thu nhập 1 (VND/tháng)</label>
+            <input type="number" id="abud_inc1" step="100000" placeholder="3000000">
+            <label>Tên nguồn thu nhập 1</label>
+            <input type="text" id="abud_inc1_name" placeholder="Intern Embedded Linux">
+            <label>Thu nhập 2 (VND/tháng)</label>
+            <input type="number" id="abud_inc2" step="100000" placeholder="3000000">
+            <label>Tên nguồn thu nhập 2</label>
+            <input type="text" id="abud_inc2_name" placeholder="Part-time Tiếng Anh">
+            <label>Chi tiêu tối thiểu/tháng</label>
+            <input type="number" id="abud_expense" step="100000" placeholder="3500000">
+            <button class="admin-btn admin-btn-primary" onclick="saveBudget()">💾 Lưu budget</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RULES TAB -->
+      <div class="admin-tab" id="atab-rules">
+        <div class="card">
+          <div class="card-title"><span class="dot" style="background:var(--orange)"></span>⚖️ Luật chơi & Thưởng/Phạt</div>
+          <div id="rulesList"></div>
+          <div class="admin-form" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
             <label>Phạt HP mỗi quest bỏ lỡ</label>
             <input type="number" id="rule_penalty_hp" min="0" max="30">
-            <label>Thưởng XP hoàn thành tất cả daily</label>
+            <label>Bonus XP hoàn thành tất cả daily (Perfect Day)</label>
             <input type="number" id="rule_perfect_xp" min="0" max="200">
-            <label>Thưởng streak 7 ngày (XP)</label>
+            <label>Bonus XP streak 7 ngày</label>
             <input type="number" id="rule_streak7_xp" min="0" max="500">
-            <label>Boss HP mỗi tuần</label>
-            <input type="number" id="rule_boss_hp" min="0" max="20">
+            <label>Số tasks Boss mỗi tuần</label>
+            <input type="number" id="rule_boss_hp" min="1" max="20">
             <button class="admin-btn admin-btn-primary" onclick="saveRules()">💾 Lưu luật chơi</button>
           </div>
         </div>
+        <div class="card">
+          <div class="card-title"><span class="dot" style="background:var(--primary)"></span>🔄 Quản lý Quests</div>
+          <button class="admin-btn admin-btn-primary" onclick="openAddQuest()">➕ Thêm Quest mới</button>
+          <button class="admin-btn" style="background:var(--sky);color:var(--primary);border:1.5px solid var(--border);margin-top:8px" onclick="resetDailyQuests()">🔄 Reset Daily Quests</button>
+        </div>
       </div>
 
-      <!-- Manage Skills -->
-      <div class="card">
-        <div class="card-title"><span class="dot" style="background:var(--blue)"></span>🛠 Quản lý Skills & Quests</div>
-        <button class="admin-btn admin-btn-primary" onclick="openAddQuest()">➕ Thêm Quest mới</button>
-        <button class="admin-btn" style="background:var(--sky);color:var(--primary);border:1.5px solid var(--border);margin-top:8px" onclick="resetDailyQuests()">🔄 Reset Daily Quests</button>
-        <button class="admin-btn admin-btn-danger" style="margin-top:8px" onclick="confirmReset()">⚠️ Reset Toàn bộ Game</button>
+      <!-- DANGER TAB -->
+      <div class="admin-tab" id="atab-danger">
+        <div class="card" style="border-color:var(--red)">
+          <div class="card-title"><span class="dot" style="background:var(--red)"></span>⚠️ Danger Zone</div>
+          <p style="font-size:0.72rem;color:var(--text2);margin-bottom:12px;line-height:1.6">Các thao tác này không thể hoàn tác. Hãy Export JSON backup trước khi thực hiện.</p>
+          <button class="admin-btn admin-btn-danger" onclick="confirmReset()">💀 Reset toàn bộ Game về mặc định</button>
+          <button class="admin-btn" style="background:var(--orange-l);color:var(--orange);border:1.5px solid var(--orange);margin-top:8px" onclick="clearLog()">🗑️ Xóa Activity Log</button>
+          <button class="admin-btn" style="background:var(--sky);color:var(--text2);border:1.5px solid var(--border);margin-top:8px" onclick="resetAchievements()">🔁 Reset tất cả Achievements</button>
+        </div>
       </div>
 
-      <!-- Stats -->
-      <div class="card">
-        <div class="card-title"><span class="dot"></span>📊 Statistics</div>
-        <div id="adminStats"></div>
-      </div>
     </div>
 
   </div>
@@ -1431,12 +1575,15 @@ function renderFunds() {
 
   // Budget stats
   const bs = document.getElementById('budgetStats');
+  const bud = S.budget || { inc1:3000000, inc1Name:'Intern Embedded Linux', inc2:3000000, inc2Name:'Part-time Tiếng Anh', expense:3500000 };
+  const saving = (bud.inc1 + bud.inc2) - bud.expense;
+  const monthsLeft = S.funds[1] ? Math.ceil(Math.max(0, S.funds[1].target - S.funds[1].current) / Math.max(1, saving)) : '?';
   if (bs) bs.innerHTML = `
-    <div class="stat-row"><span class="stat-k">Thu nhập intern (ước tính)</span><span class="stat-v">~3,000,000đ</span></div>
-    <div class="stat-row"><span class="stat-k">Thu nhập PT Tiếng Anh</span><span class="stat-v">~3,000,000đ</span></div>
-    <div class="stat-row"><span class="stat-k">Chi tiêu tối thiểu/tháng</span><span class="stat-v">~3,500,000đ</span></div>
-    <div class="stat-row"><span class="stat-k">Tiết kiệm được/tháng</span><span class="stat-v" style="color:var(--green)">~2,500,000đ</span></div>
-    <div class="stat-row"><span class="stat-k">Tháng đủ quỹ dự phòng</span><span class="stat-v">${Math.ceil((42000000 - S.funds[1].current) / 2500000)} tháng nữa</span></div>
+    <div class="stat-row"><span class="stat-k">${bud.inc1Name}</span><span class="stat-v">${fmtMoney(bud.inc1)}</span></div>
+    <div class="stat-row"><span class="stat-k">${bud.inc2Name}</span><span class="stat-v">${fmtMoney(bud.inc2)}</span></div>
+    <div class="stat-row"><span class="stat-k">Chi tiêu tối thiểu</span><span class="stat-v">${fmtMoney(bud.expense)}</span></div>
+    <div class="stat-row"><span class="stat-k">Tiết kiệm được</span><span class="stat-v" style="color:var(--green)">${fmtMoney(saving)}/tháng</span></div>
+    <div class="stat-row"><span class="stat-k">Tháng đủ quỹ dự phòng</span><span class="stat-v">${monthsLeft} tháng nữa</span></div>
   `;
 }
 
@@ -1465,42 +1612,318 @@ function renderLog() {
 }
 
 function renderAdmin() {
-  // Rules form
-  const r = S.rules;
-  document.getElementById('rule_penalty_hp').value  = r.penaltyHp;
-  document.getElementById('rule_perfect_xp').value  = r.perfectDayXp;
-  document.getElementById('rule_streak7_xp').value  = r.streak7Xp;
-  document.getElementById('rule_boss_hp').value     = r.bossMaxHp;
-
-  // Rules list
-  document.getElementById('rulesList').innerHTML = `
-    <div class="rule-item"><span class="rule-name">Phạt bỏ quest</span><span class="rule-val">-${r.penaltyHp} HP / quest</span></div>
-    <div class="rule-item"><span class="rule-name">Perfect day bonus</span><span class="rule-val">+${r.perfectDayXp} XP</span></div>
-    <div class="rule-item"><span class="rule-name">Streak 7 ngày</span><span class="rule-val">+${r.streak7Xp} XP</span></div>
-    <div class="rule-item"><span class="rule-name">Boss HP tuần</span><span class="rule-val">${r.bossMaxHp} tasks</span></div>
-    <div class="rule-item"><span class="rule-name">Streak mất</span><span class="rule-val">-(streak × 5) XP</span></div>
-  `;
-
-  // Sheets URL
+  renderAdminStats();
+  renderRulesList();
+  populateRulesTab();
   document.getElementById('sheetsUrl').value = S.sheetsUrl || '';
-
-  // Admin stats
-  const totalDone = Object.values(S.quests).flat().filter(q=>q.done).length;
-  const totalQ    = Object.values(S.quests).flat().length;
-  const totalSkillLv = S.skills.reduce((a,s)=>a+s.lv,0);
-  document.getElementById('adminStats').innerHTML = `
-    <div class="stat-row"><span class="stat-k">Total Level</span><span class="stat-v">LV ${S.level}</span></div>
-    <div class="stat-row"><span class="stat-k">Total XP earned</span><span class="stat-v">${S.xp} XP</span></div>
-    <div class="stat-row"><span class="stat-k">Streak hiện tại</span><span class="stat-v">🔥 ${S.streak} ngày</span></div>
-    <div class="stat-row"><span class="stat-k">Quests hoàn thành</span><span class="stat-v">${totalDone} / ${totalQ}</span></div>
-    <div class="stat-row"><span class="stat-k">Tổng Skill Level</span><span class="stat-v">${totalSkillLv}</span></div>
-    <div class="stat-row"><span class="stat-k">Achievements</span><span class="stat-v">${S.achievements.filter(a=>a.unlocked).length} / ${S.achievements.length}</span></div>
-  `;
 }
 
 // =========================================================
-// MAIN RENDER DISPATCH
+// ADMIN TABS
 // =========================================================
+function switchAdminTab(tab, btn) {
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#page-admin .qtab').forEach(b => b.classList.remove('active'));
+  document.getElementById(`atab-${tab}`).classList.add('active');
+  if (btn) btn.classList.add('active');
+  // Populate fields when switching
+  if (tab === 'player')  populatePlayerTab();
+  if (tab === 'boss')    populateBossTab();
+  if (tab === 'grad')    renderAdminGrad();
+  if (tab === 'skills')  renderAdminSkills();
+  if (tab === 'funds')   renderAdminFunds();
+  if (tab === 'rules')   populateRulesTab();
+  if (tab === 'sync')    renderAdminStats();
+}
+
+// ---- PLAYER TAB ----
+function populatePlayerTab() {
+  document.getElementById('ap_name').value   = S.playerName || 'Dev Hero';
+  document.getElementById('ap_level').value  = S.level;
+  document.getElementById('ap_xp').value     = S.xp;
+  document.getElementById('ap_streak').value = S.streak;
+  document.getElementById('ap_hp').value     = S.resources.hp;
+  document.getElementById('ap_en').value     = S.resources.en;
+  document.getElementById('ap_mon').value    = S.resources.mon;
+  document.getElementById('ap_time').value   = S.resources.time;
+}
+
+function savePlayerInfo() {
+  S.playerName = document.getElementById('ap_name').value.trim() || 'Dev Hero';
+  S.level      = parseInt(document.getElementById('ap_level').value) || S.level;
+  S.xp         = parseInt(document.getElementById('ap_xp').value) || 0;
+  S.streak     = parseInt(document.getElementById('ap_streak').value) || 0;
+  save(); renderTopBar();
+  toast('✅ Đã lưu thông tin nhân vật!', 'success');
+  addLog(`Cập nhật nhân vật: ${S.playerName} LV${S.level}`, 'info');
+}
+
+function savePlayerResources() {
+  S.resources.hp   = Math.max(0, Math.min(100, parseFloat(document.getElementById('ap_hp').value) || 0));
+  S.resources.en   = Math.max(0, Math.min(100, parseFloat(document.getElementById('ap_en').value) || 0));
+  S.resources.mon  = Math.max(0, parseFloat(document.getElementById('ap_mon').value) || 0);
+  S.resources.time = Math.max(0, Math.min(24, parseFloat(document.getElementById('ap_time').value) || 0));
+  save(); renderResources();
+  toast('✅ Đã lưu resources!', 'success');
+}
+
+// ---- BOSS TAB ----
+function populateBossTab() {
+  document.getElementById('ab_name').value  = S.boss.name || '';
+  document.getElementById('ab_tasks').value = S.boss.tasks.map(t => t.text).join('\n');
+  renderBossPreview();
+}
+
+function renderBossPreview() {
+  const name  = document.getElementById('ab_name').value || 'Boss';
+  const tasks = document.getElementById('ab_tasks').value.split('\n').filter(t => t.trim());
+  document.getElementById('bossPreview').innerHTML = `
+    <div style="font-weight:800;font-size:0.9rem;margin-bottom:4px">${name}</div>
+    <div style="font-size:0.65rem;color:rgba(255,255,255,.5);margin-bottom:8px">${tasks.length} tasks</div>
+    ${tasks.map(t => `<div style="font-size:0.7rem;margin-bottom:4px;display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border:1.5px solid rgba(255,255,255,.3);border-radius:3px;display:inline-block;flex-shrink:0"></span>${t}</div>`).join('')}
+  `;
+}
+
+function saveBoss() {
+  const name  = document.getElementById('ab_name').value.trim();
+  const tasks = document.getElementById('ab_tasks').value.split('\n').filter(t => t.trim());
+  if (!name || tasks.length === 0) { toast('Nhập tên Boss và ít nhất 1 task!', 'warning'); return; }
+  S.boss = { name, hp: tasks.length, maxHp: tasks.length, tasks: tasks.map(t => ({ text: t.trim(), done: false })) };
+  save(); renderBoss(); renderBossPreview();
+  toast('🐉 Boss đã cập nhật!', 'success');
+  addLog(`Boss mới: "${name}" — ${tasks.length} tasks`, 'info');
+}
+
+function resetBoss() {
+  if (!confirm('Reset Boss về chưa làm (tuần mới)?')) return;
+  S.boss.tasks.forEach(t => t.done = false);
+  S.boss.hp = S.boss.maxHp;
+  save(); renderBoss(); populateBossTab();
+  toast('🔄 Boss đã reset cho tuần mới!', 'success');
+}
+
+// ---- GRAD TAB ----
+function renderAdminGrad() {
+  const el = document.getElementById('adminGradList');
+  if (!el) return;
+  el.innerHTML = S.gradItems.map((g, i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--sky);border-radius:8px;margin-bottom:6px;border:1.5px solid ${g.done ? 'var(--green)' : 'var(--border)'}">
+      <div style="flex:1;font-size:0.75rem;font-weight:600;color:${g.done ? 'var(--green)' : 'var(--text)'}">${g.done ? '✅' : '⬜'} ${g.text}</div>
+      <button onclick="toggleGradAdmin(${i})" style="padding:4px 10px;border:1.5px solid ${g.done ? 'var(--green)' : 'var(--border)'};border-radius:6px;background:none;font-size:0.62rem;cursor:pointer;font-family:var(--font-body);color:${g.done ? 'var(--green)' : 'var(--text2)'}">
+        ${g.done ? 'Bỏ ✓' : 'Tick ✓'}
+      </button>
+      <button onclick="deleteGradItem(${i})" style="padding:4px 8px;border:1.5px solid var(--red-l);border-radius:6px;background:none;font-size:0.62rem;cursor:pointer;color:var(--red)">🗑️</button>
+    </div>
+  `).join('') || '<div style="color:var(--text3);font-size:0.75rem;text-align:center;padding:16px">Chưa có mục nào</div>';
+}
+
+function toggleGradAdmin(i) {
+  S.gradItems[i].done = !S.gradItems[i].done;
+  if (S.gradItems[i].done) { gainXP(30); addLog(`Graduation ✔: ${S.gradItems[i].text}`, 'grad', 30); }
+  save(); renderAdminGrad(); renderGrad();
+}
+
+function deleteGradItem(i) {
+  if (!confirm(`Xóa "${S.gradItems[i].text}"?`)) return;
+  S.gradItems.splice(i, 1);
+  save(); renderAdminGrad(); renderGrad();
+  toast('🗑️ Đã xóa mục!', 'success');
+}
+
+function addGradItem() {
+  const text = document.getElementById('ag_new').value.trim();
+  if (!text) return;
+  S.gradItems.push({ text, done: false });
+  document.getElementById('ag_new').value = '';
+  save(); renderAdminGrad(); renderGrad();
+  toast(`✅ Thêm: "${text}"`, 'success');
+}
+
+// ---- SKILLS TAB ----
+function renderAdminSkills() {
+  const el = document.getElementById('adminSkillList');
+  if (!el) return;
+  el.innerHTML = S.skills.map((s, i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--sky);border-radius:10px;margin-bottom:8px;border:1.5px solid var(--border)">
+      <div style="width:36px;height:36px;border-radius:10px;background:${s.bg||'#EEF4FF'};display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">${s.icon}</div>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:0.78rem">${s.name}</div>
+        <div style="font-size:0.62rem;color:var(--text3)">LV${s.lv} · ${s.xp}/${s.maxXp} XP</div>
+      </div>
+      <button onclick="editSkill(${i})" style="padding:5px 10px;border:1.5px solid var(--border);border-radius:6px;background:none;font-size:0.62rem;cursor:pointer;font-family:var(--font-body);color:var(--text2)">✏️ Sửa</button>
+      <button onclick="deleteSkill(${i})" style="padding:5px 8px;border:1.5px solid var(--red-l);border-radius:6px;background:none;font-size:0.62rem;cursor:pointer;color:var(--red)">🗑️</button>
+    </div>
+  `).join('');
+}
+
+function editSkill(i) {
+  const s = S.skills[i];
+  const name  = prompt('Tên skill:', s.name);
+  if (name === null) return;
+  const icon  = prompt('Icon (emoji):', s.icon);
+  if (icon === null) return;
+  const lv    = parseInt(prompt('Level:', s.lv));
+  const xp    = parseInt(prompt('XP hiện tại:', s.xp));
+  if (name.trim()) S.skills[i].name = name.trim();
+  if (icon.trim()) S.skills[i].icon = icon.trim();
+  if (!isNaN(lv))  S.skills[i].lv  = lv;
+  if (!isNaN(xp))  S.skills[i].xp  = xp;
+  save(); renderAdminSkills(); renderSkills();
+  toast('✅ Skill đã cập nhật!', 'success');
+}
+
+function deleteSkill(i) {
+  if (!confirm(`Xóa skill "${S.skills[i].name}"?`)) return;
+  S.skills.splice(i, 1);
+  save(); renderAdminSkills(); renderSkills();
+  toast('🗑️ Đã xóa skill!', 'success');
+}
+
+function addSkill() {
+  const name  = document.getElementById('ask_name').value.trim();
+  const icon  = document.getElementById('ask_icon').value.trim() || '⭐';
+  const color = document.getElementById('ask_color').value || '#6C63FF';
+  if (!name) { toast('Nhập tên skill!', 'warning'); return; }
+  // Convert hex color to light background
+  const bg = color + '22';
+  S.skills.push({ id: name.toLowerCase().replace(/\s+/g,'_'), name, icon, color, bg, lv:1, xp:0, maxXp:200 });
+  document.getElementById('ask_name').value = '';
+  document.getElementById('ask_icon').value = '';
+  save(); renderAdminSkills(); renderSkills();
+  toast(`✅ Thêm skill "${name}"!`, 'success');
+}
+
+// ---- FUNDS TAB ----
+function renderAdminFunds() {
+  const el = document.getElementById('adminFundList');
+  if (!el) return;
+  el.innerHTML = S.funds.map((f, i) => `
+    <div style="padding:12px;background:var(--sky);border-radius:10px;margin-bottom:8px;border:1.5px solid var(--border)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div style="font-weight:700;font-size:0.78rem">${f.name}</div>
+        <div style="display:flex;gap:6px">
+          <button onclick="editFund(${i})" style="padding:4px 10px;border:1.5px solid var(--border);border-radius:6px;background:none;font-size:0.62rem;cursor:pointer;font-family:var(--font-body);color:var(--text2)">✏️ Sửa</button>
+          <button onclick="deleteFund(${i})" style="padding:4px 8px;border:1.5px solid var(--red-l);border-radius:6px;background:none;font-size:0.62rem;cursor:pointer;color:var(--red)">🗑️</button>
+        </div>
+      </div>
+      <div style="font-size:0.68rem;color:var(--text2)">${fmtMoney(f.current)} / ${fmtMoney(f.target)} · ${f.note}</div>
+    </div>
+  `).join('');
+
+  // Populate budget
+  if (S.budget) {
+    document.getElementById('abud_inc1').value       = S.budget.inc1 || '';
+    document.getElementById('abud_inc1_name').value  = S.budget.inc1Name || '';
+    document.getElementById('abud_inc2').value       = S.budget.inc2 || '';
+    document.getElementById('abud_inc2_name').value  = S.budget.inc2Name || '';
+    document.getElementById('abud_expense').value    = S.budget.expense || '';
+  }
+}
+
+function editFund(i) {
+  const f = S.funds[i];
+  const name   = prompt('Tên quỹ:', f.name);
+  if (name === null) return;
+  const target = parseFloat(prompt('Mục tiêu (VND):', f.target));
+  const cur    = parseFloat(prompt('Số dư hiện tại (VND):', f.current));
+  const note   = prompt('Ghi chú:', f.note);
+  if (name.trim())  S.funds[i].name   = name.trim();
+  if (!isNaN(target)) S.funds[i].target = target;
+  if (!isNaN(cur))    S.funds[i].current = cur;
+  if (note !== null)  S.funds[i].note   = note;
+  save(); renderAdminFunds(); renderFunds();
+  toast('✅ Quỹ đã cập nhật!', 'success');
+}
+
+function deleteFund(i) {
+  if (!confirm(`Xóa quỹ "${S.funds[i].name}"?`)) return;
+  S.funds.splice(i, 1);
+  save(); renderAdminFunds(); renderFunds();
+  toast('🗑️ Đã xóa quỹ!', 'success');
+}
+
+function addFund() {
+  const name   = document.getElementById('afu_name').value.trim();
+  const target = parseFloat(document.getElementById('afu_target').value);
+  const note   = document.getElementById('afu_note').value.trim();
+  if (!name || isNaN(target)) { toast('Nhập đủ tên và mục tiêu!', 'warning'); return; }
+  const colors = ['#6C63FF','#10B981','#F59E0B','#14B8A6','#EC4899','#3B82F6'];
+  const c = colors[S.funds.length % colors.length];
+  S.funds.push({ name, current:0, target, note, colors:[c, c+'99'] });
+  document.getElementById('afu_name').value = '';
+  document.getElementById('afu_target').value = '';
+  document.getElementById('afu_note').value = '';
+  save(); renderAdminFunds(); renderFunds();
+  toast(`✅ Thêm quỹ "${name}"!`, 'success');
+}
+
+function saveBudget() {
+  if (!S.budget) S.budget = {};
+  S.budget.inc1      = parseFloat(document.getElementById('abud_inc1').value) || 0;
+  S.budget.inc1Name  = document.getElementById('abud_inc1_name').value.trim() || 'Thu nhập 1';
+  S.budget.inc2      = parseFloat(document.getElementById('abud_inc2').value) || 0;
+  S.budget.inc2Name  = document.getElementById('abud_inc2_name').value.trim() || 'Thu nhập 2';
+  S.budget.expense   = parseFloat(document.getElementById('abud_expense').value) || 0;
+  save(); renderFunds();
+  toast('✅ Đã lưu budget!', 'success');
+}
+
+// ---- RULES TAB ----
+function populateRulesTab() {
+  document.getElementById('rule_penalty_hp').value  = S.rules.penaltyHp;
+  document.getElementById('rule_perfect_xp').value  = S.rules.perfectDayXp;
+  document.getElementById('rule_streak7_xp').value  = S.rules.streak7Xp;
+  document.getElementById('rule_boss_hp').value     = S.rules.bossMaxHp;
+  renderRulesList();
+}
+
+function renderRulesList() {
+  const r = S.rules;
+  const el = document.getElementById('rulesList');
+  if (!el) return;
+  el.innerHTML = `
+    <div class="rule-item"><span class="rule-name">Phạt bỏ quest</span><span class="rule-val">-${r.penaltyHp} HP / quest</span></div>
+    <div class="rule-item"><span class="rule-name">Perfect Day bonus</span><span class="rule-val">+${r.perfectDayXp} XP</span></div>
+    <div class="rule-item"><span class="rule-name">Streak 7 ngày bonus</span><span class="rule-val">+${r.streak7Xp} XP</span></div>
+    <div class="rule-item"><span class="rule-name">Streak bị phá mất</span><span class="rule-val">streak × 5 XP</span></div>
+    <div class="rule-item"><span class="rule-name">Boss tasks / tuần</span><span class="rule-val">${r.bossMaxHp}</span></div>
+  `;
+}
+
+// ---- DANGER ZONE ----
+function clearLog() {
+  if (!confirm('Xóa toàn bộ Activity Log?')) return;
+  S.log = [];
+  save(); renderLog();
+  toast('🗑️ Log đã xóa!', 'success');
+}
+
+function resetAchievements() {
+  if (!confirm('Reset tất cả Achievements về chưa unlock?')) return;
+  S.achievements.forEach(a => a.unlocked = false);
+  save(); renderAchievements();
+  toast('🔁 Achievements đã reset!', 'success');
+}
+
+// ---- ADMIN STATS ----
+function renderAdminStats() {
+  const el = document.getElementById('adminStats');
+  if (!el) return;
+  const totalDone = Object.values(S.quests).flat().filter(q => q.done).length;
+  const totalQ    = Object.values(S.quests).flat().length;
+  const totalSkillLv = S.skills.reduce((a, s) => a + s.lv, 0);
+  el.innerHTML = `
+    <div class="stat-row"><span class="stat-k">Character Level</span><span class="stat-v">LV ${S.level}</span></div>
+    <div class="stat-row"><span class="stat-k">XP hiện tại</span><span class="stat-v">${S.xp} XP</span></div>
+    <div class="stat-row"><span class="stat-k">Streak</span><span class="stat-v">🔥 ${S.streak} ngày</span></div>
+    <div class="stat-row"><span class="stat-k">Quests hoàn thành</span><span class="stat-v">${totalDone} / ${totalQ}</span></div>
+    <div class="stat-row"><span class="stat-k">Tổng Skill Level</span><span class="stat-v">${totalSkillLv}</span></div>
+    <div class="stat-row"><span class="stat-k">Achievements</span><span class="stat-v">${S.achievements.filter(a => a.unlocked).length} / ${S.achievements.length}</span></div>
+    <div class="stat-row"><span class="stat-k">Last Sync</span><span class="stat-v">${S.lastSync ? new Date(S.lastSync).toLocaleString('vi-VN') : 'Chưa sync'}</span></div>
+  `;
+}
+
+
 function renderAll() {
   renderTopBar();
   renderResources();
