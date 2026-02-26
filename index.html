@@ -1133,13 +1133,20 @@ async function syncToSheets() {
   btn.classList.add('syncing');
   document.getElementById('syncIcon').textContent = '⏳';
   try {
-    const res = await postToSheets({ action:'saveState', data: S });
+    // no-cors: fire and forget, không đọc response — nhưng data vẫn được ghi vào Sheets
+    await fetch(S.sheetsUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'saveState', data: S })
+    });
     S.lastSync = new Date().toISOString();
     save();
     document.getElementById('lastSync').textContent = 'Synced ' + new Date().toLocaleTimeString('vi-VN');
-    toast('☁️ Đã sync lên Google Sheets!', 'success');
+    toast('☁️ Đã gửi lên Google Sheets!', 'success');
+    addLog('Sync lên Sheets thành công', 'info');
   } catch(e) {
-    toast('❌ Sync thất bại. Kiểm tra URL.', 'warning');
+    toast('❌ Sync thất bại: ' + e.message, 'warning');
   }
   btn.classList.remove('syncing');
   document.getElementById('syncIcon').textContent = '☁️';
@@ -1147,29 +1154,41 @@ async function syncToSheets() {
 
 async function loadFromSheets() {
   if (!S.sheetsUrl) { toast('⚠️ Chưa cài đặt Sheets URL.', 'warning'); return; }
-  try {
-    const res = await fetch(`${S.sheetsUrl}?action=getState`);
-    const data = await res.json();
-    if (data.success && data.data) {
+  toast('⏳ Đang load từ Sheets...', 'info');
+  // Dùng JSONP trick để bypass CORS cho GET
+  const callbackName = 'cb_' + Date.now();
+  const url = S.sheetsUrl + '?action=getState&callback=' + callbackName;
+  const script = document.createElement('script');
+  script.src = url;
+  const timeout = setTimeout(() => {
+    toast('❌ Load thất bại — Sheets không phản hồi.', 'warning');
+    script.remove();
+    delete window[callbackName];
+  }, 10000);
+  window[callbackName] = (data) => {
+    clearTimeout(timeout);
+    script.remove();
+    delete window[callbackName];
+    if (data && data.success && data.data) {
       S = data.data;
-      save();
-      renderAll();
-      toast('📥 Đã tải dữ liệu từ Sheets!', 'success');
+      save(); renderAll();
+      toast('📥 Đã load dữ liệu từ Sheets!', 'success');
     } else {
-      toast('⚠️ Không có dữ liệu trên Sheets.', 'warning');
+      toast('⚠️ Sheets chưa có dữ liệu — hãy Sync trước.', 'warning');
     }
-  } catch(e) {
-    toast('❌ Load thất bại.', 'warning');
-  }
+  };
+  document.head.appendChild(script);
 }
 
 async function postToSheets(payload) {
   if (!S.sheetsUrl) return;
-  return fetch(S.sheetsUrl, {
+  // fire and forget với no-cors
+  fetch(S.sheetsUrl, {
     method: 'POST',
-    body: JSON.stringify(payload),
-    headers: { 'Content-Type': 'application/json' }
-  }).then(r => r.json());
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload)
+  }).catch(() => {});
 }
 
 function saveSheetsUrl() {
