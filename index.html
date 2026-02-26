@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#6C63FF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Life RPG">
+<title>Life RPG</title>
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700;800;900&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+/* ===== DESIGN SYSTEM ===== */
+:root {
+  --sky:       #EEF4FF;
+  --white:     #FFFFFF;
+  --card:      #FFFFFF;
+  --border:    #E8EEFF;
+  --shadow:    0 2px 16px rgba(108,99,255,0.08);
+  --shadow-lg: 0 8px 32px rgba(108,99,255,0.14);
+
+  --primary:   #6C63FF;
+  --primary-l: #EEF4FF;
+  --primary-d: #4F46E5;
+
+  --gold:      #F59E0B;
+  --gold-l:    #FEF3C7;
+  --green:     #10B981;
+  --green-l:   #D1FAE5;
+  --red:       #EF4444;
+  --red-l:     #FEE2E2;
+  --orange:    #F97316;
+  --orange-l:  #FFEDD5;
+  --blue:      #3B82F6;
+  --blue-l:    #DBEAFE;
+  --pink:      #EC4899;
+  --pink-l:    #FCE7F3;
+  --teal:      #14B8A6;
+  --teal-l:    #CCFBF1;
+
+  --text:      #1E1B4B;
+  --text2:     #6B7280;
+  --text3:     #9CA3AF;
+
+  --radius:    16px;
+  --radius-sm: 10px;
+  --radius-xs: 6px;
+
+  --font-head: 'Syne', 'Be Vietnam Pro', sans-serif;
+  --font-body: 'Be Vietnam Pro', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%; font-family: var(--font-body);
+  background: var(--sky); color: var(--text);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+/* ===== LAYOUT ===== */
+.app { display: flex; flex-direction: column; height: 100dvh; max-width: 430px; margin: 0 auto; background: var(--white); position: relative; overflow: hidden; }
+@media(min-width:900px){ .app { max-width: 100%; flex-direction: row; } }
+
+/* TOP BAR */
+.topbar {
+  background: linear-gradient(135deg, var(--primary) 0%, #A78BFA 100%);
+  padding: 14px 18px 10px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+.topbar::before {
+  content:''; position:absolute; top:-40px; right:-40px;
+  width:150px; height:150px; background:rgba(255,255,255,0.06);
+  border-radius:50%;
+}
+.topbar-row { display:flex; align-items:center; justify-content:space-between; }
+.player-name { font-family:var(--font-head); font-size:1.1rem; color:#fff; font-weight:800; }
+.player-sub  { font-size:0.68rem; color:rgba(255,255,255,0.75); margin-top:1px; }
+.level-pill  {
+  background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.3);
+  color:#fff; font-family:var(--font-head); font-size:0.75rem; font-weight:700;
+  padding:5px 12px; border-radius:20px; backdrop-filter:blur(4px);
+}
+.xp-row { display:flex; align-items:center; gap:8px; margin-top:10px; }
+.xp-bar-bg { flex:1; height:7px; background:rgba(255,255,255,0.2); border-radius:4px; overflow:hidden; }
+.xp-bar-fill { height:100%; background:linear-gradient(90deg,#fff,rgba(255,255,255,0.7)); border-radius:4px; transition:width .5s cubic-bezier(.34,1.56,.64,1); }
+.xp-label { font-size:0.6rem; color:rgba(255,255,255,0.8); white-space:nowrap; }
+.streak-badge {
+  display:inline-flex; align-items:center; gap:4px;
+  background:rgba(255,255,255,0.15); border-radius:20px; padding:4px 10px;
+  font-size:0.68rem; color:#fff; margin-top:6px;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.streak-badge.danger { background:rgba(239,68,68,0.25); border-color:rgba(239,68,68,0.4); }
+
+/* SYNC BTN */
+.sync-btn {
+  background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.3);
+  color:#fff; padding:6px 10px; border-radius:8px; font-size:0.7rem;
+  cursor:pointer; font-family:var(--font-body); font-weight:600;
+  display:flex; align-items:center; gap:4px; transition:all .2s;
+}
+.sync-btn:hover { background:rgba(255,255,255,0.28); }
+.sync-btn.syncing { opacity:.7; pointer-events:none; }
+
+/* TABS */
+.tabs { display:flex; background:var(--white); border-bottom:1px solid var(--border); flex-shrink:0; }
+.tab-btn {
+  flex:1; padding:10px 4px; border:none; background:none; cursor:pointer;
+  font-family:var(--font-body); font-size:0.65rem; font-weight:700;
+  color:var(--text3); display:flex; flex-direction:column; align-items:center; gap:2px;
+  border-bottom:2px solid transparent; transition:all .2s; letter-spacing:.5px;
+}
+.tab-btn .ti { font-size:1.1rem; }
+.tab-btn.active { color:var(--primary); border-bottom-color:var(--primary); }
+
+/* CONTENT AREA */
+.content { flex:1; overflow-y:auto; padding:16px; scroll-behavior:smooth; }
+.content::-webkit-scrollbar { display:none; }
+.page { display:none; }
+.page.active { display:block; }
+
+/* ===== CARDS ===== */
+.card {
+  background:var(--card); border-radius:var(--radius); padding:16px;
+  box-shadow:var(--shadow); margin-bottom:12px; border:1px solid var(--border);
+}
+.card-title {
+  font-family:var(--font-head); font-size:0.75rem; font-weight:800;
+  letter-spacing:1.5px; text-transform:uppercase; color:var(--text2);
+  margin-bottom:12px; display:flex; align-items:center; gap:6px;
+}
+.card-title .dot { width:8px; height:8px; border-radius:50%; background:var(--primary); }
+
+/* ===== RESOURCE BARS ===== */
+.res-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.res-box {
+  background:var(--sky); border-radius:var(--radius-sm); padding:12px;
+  border:1px solid var(--border);
+}
+.res-box-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+.res-icon { font-size:1.1rem; }
+.res-name { font-size:0.62rem; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:.5px; }
+.res-num  { font-family:var(--font-head); font-size:1.1rem; font-weight:700; color:var(--text); }
+.res-max  { font-size:0.58rem; color:var(--text3); }
+.mini-bar { height:5px; border-radius:3px; background:var(--border); overflow:hidden; margin-top:4px; }
+.mini-bar-fill { height:100%; border-radius:3px; transition:width .4s; }
+.res-tap { cursor:pointer; user-select:none; transition:transform .1s; }
+.res-tap:active { transform:scale(.97); }
+.res-note { font-size:0.58rem; color:var(--text3); margin-top:4px; }
+
+/* ===== QUEST TABS ===== */
+.qtab-row { display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; margin-bottom:14px; }
+.qtab-row::-webkit-scrollbar { display:none; }
+.qtab {
+  flex-shrink:0; padding:6px 14px; border-radius:20px; border:1.5px solid var(--border);
+  background:var(--white); font-size:0.68rem; font-weight:700; cursor:pointer;
+  font-family:var(--font-body); color:var(--text2); transition:all .2s;
+}
+.qtab.active { background:var(--primary); border-color:var(--primary); color:#fff; }
+
+/* ===== QUEST ITEM ===== */
+.quest-item {
+  background:var(--card); border-radius:var(--radius-sm); padding:14px;
+  border:1.5px solid var(--border); margin-bottom:10px;
+  transition:all .2s; position:relative; overflow:hidden;
+}
+.quest-item:hover { border-color:var(--primary); box-shadow:var(--shadow); }
+.quest-item.done { opacity:.55; background:var(--sky); }
+.quest-item.overdue { border-color:var(--red); }
+.quest-top { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:6px; }
+.quest-title { font-weight:800; font-size:0.85rem; line-height:1.3; }
+.type-pill {
+  font-size:0.58rem; font-weight:700; padding:3px 8px; border-radius:10px;
+  white-space:nowrap; flex-shrink:0; text-transform:uppercase; letter-spacing:.5px;
+}
+.type-daily    { background:var(--primary-l); color:var(--primary); }
+.type-weekly   { background:var(--orange-l);  color:var(--orange);  }
+.type-main     { background:var(--gold-l);    color:var(--gold);    }
+.type-longterm { background:var(--teal-l);    color:var(--teal);    }
+
+.quest-desc { font-size:0.7rem; color:var(--text2); margin-bottom:8px; line-height:1.5; }
+.quest-tags { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px; }
+.tag {
+  font-size:0.6rem; font-weight:700; padding:2px 7px; border-radius:6px;
+}
+.tag-cost { background:var(--red-l); color:var(--red); }
+.tag-reward { background:var(--green-l); color:var(--green); }
+.tag-skill { background:var(--blue-l); color:var(--blue); }
+
+.do-btn {
+  width:100%; padding:9px; border:none; border-radius:var(--radius-xs);
+  background:linear-gradient(135deg, var(--primary), var(--primary-d));
+  color:#fff; font-family:var(--font-body); font-weight:800; font-size:0.75rem;
+  cursor:pointer; letter-spacing:.5px; transition:all .2s;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+}
+.do-btn:hover { transform:translateY(-1px); box-shadow:0 4px 15px rgba(108,99,255,0.35); }
+.do-btn:active { transform:scale(.98); }
+.done-check { font-size:0.75rem; color:var(--green); font-weight:700; text-align:center; padding:4px; }
+
+.add-quest-btn {
+  width:100%; padding:12px; border:2px dashed var(--border); border-radius:var(--radius-sm);
+  background:none; color:var(--text3); font-family:var(--font-body); font-weight:700;
+  font-size:0.78rem; cursor:pointer; transition:all .2s;
+}
+.add-quest-btn:hover { border-color:var(--primary); color:var(--primary); background:var(--primary-l); }
+
+/* ===== SKILLS ===== */
+.skill-item { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+.skill-icon-box {
+  width:42px; height:42px; border-radius:12px; display:flex; align-items:center;
+  justify-content:center; font-size:1.3rem; flex-shrink:0;
+}
+.skill-body { flex:1; }
+.skill-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+.skill-name { font-weight:700; font-size:0.8rem; }
+.skill-lv-badge {
+  font-size:0.6rem; font-weight:800; padding:2px 7px; border-radius:8px;
+  background:var(--primary-l); color:var(--primary);
+}
+.skill-bar-bg { height:7px; background:var(--border); border-radius:4px; overflow:hidden; }
+.skill-bar-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,var(--primary),#A78BFA); transition:width .5s cubic-bezier(.34,1.56,.64,1); }
+.skill-xp-text { font-size:0.58rem; color:var(--text3); margin-top:3px; }
+.skill-plus {
+  width:32px; height:32px; border-radius:8px; border:1.5px solid var(--border);
+  background:var(--sky); cursor:pointer; font-size:1.1rem; display:flex;
+  align-items:center; justify-content:center; flex-shrink:0; transition:all .2s;
+}
+.skill-plus:hover { background:var(--green-l); border-color:var(--green); }
+
+/* ===== FINANCE ===== */
+.fund-item { margin-bottom:14px; }
+.fund-top { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:5px; }
+.fund-name { font-weight:700; font-size:0.8rem; }
+.fund-amounts { text-align:right; }
+.fund-cur  { font-family:var(--font-head); font-weight:800; font-size:0.95rem; color:var(--green); }
+.fund-target-text { font-size:0.6rem; color:var(--text3); }
+.fund-bar-bg { height:10px; background:var(--border); border-radius:5px; overflow:hidden; margin-bottom:4px; }
+.fund-bar-fill { height:100%; border-radius:5px; transition:width .5s; }
+.fund-note { font-size:0.62rem; color:var(--text3); }
+.fund-input-row { display:flex; gap:6px; margin-top:8px; }
+.fund-input-row input {
+  flex:1; padding:7px 10px; border:1.5px solid var(--border); border-radius:8px;
+  font-family:var(--font-body); font-size:0.75rem; background:var(--sky);
+  color:var(--text); outline:none;
+}
+.fund-input-row input:focus { border-color:var(--primary); background:var(--white); }
+.fund-input-row button {
+  padding:7px 14px; border:none; border-radius:8px;
+  background:var(--green); color:#fff; font-family:var(--font-body);
+  font-weight:700; font-size:0.72rem; cursor:pointer;
+}
+
+/* ===== ACHIEVEMENTS ===== */
+.achieve-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.achieve-item {
+  text-align:center; padding:14px 8px; border-radius:var(--radius-sm);
+  border:1.5px solid var(--border); background:var(--sky); transition:all .2s;
+}
+.achieve-item.unlocked { background:var(--gold-l); border-color:var(--gold); box-shadow:0 0 0 2px rgba(245,158,11,.1); }
+.achieve-item.locked { filter:grayscale(.7); opacity:.55; }
+.achieve-icon { font-size:1.6rem; margin-bottom:5px; }
+.achieve-name { font-size:0.6rem; font-weight:700; line-height:1.3; color:var(--text); }
+.achieve-hint { font-size:0.55rem; color:var(--text3); margin-top:2px; }
+
+/* ===== PENALTY ZONE ===== */
+.penalty-card {
+  background:linear-gradient(135deg, #FEE2E2, #FECACA);
+  border:1.5px solid var(--red); border-radius:var(--radius-sm); padding:14px; margin-bottom:12px;
+}
+.penalty-title { font-weight:800; font-size:0.8rem; color:var(--red); margin-bottom:6px; }
+.penalty-item { font-size:0.7rem; color:#7F1D1D; margin-bottom:4px; display:flex; align-items:center; gap:6px; }
+
+/* ===== BOSS BATTLE ===== */
+.boss-card {
+  background:linear-gradient(135deg, #1E1B4B, #312E81);
+  border-radius:var(--radius); padding:18px; margin-bottom:12px; color:#fff;
+  position:relative; overflow:hidden;
+}
+.boss-card::before {
+  content:''; position:absolute; top:-20px; right:-20px;
+  width:100px; height:100px; background:rgba(167,139,250,0.15); border-radius:50%;
+}
+.boss-name { font-family:var(--font-head); font-size:1rem; font-weight:800; margin-bottom:4px; }
+.boss-sub  { font-size:0.68rem; color:rgba(255,255,255,0.65); margin-bottom:10px; }
+.boss-hp-bar { height:10px; background:rgba(255,255,255,0.15); border-radius:5px; overflow:hidden; margin-bottom:6px; }
+.boss-hp-fill { height:100%; background:linear-gradient(90deg,#EF4444,#F97316); border-radius:5px; transition:width .5s; }
+.boss-tasks { margin-top:10px; }
+.boss-task { display:flex; align-items:center; gap:8px; font-size:0.72rem; margin-bottom:6px; color:rgba(255,255,255,.85); }
+.boss-task-check {
+  width:18px; height:18px; border:1.5px solid rgba(255,255,255,.3); border-radius:4px;
+  display:flex; align-items:center; justify-content:center; font-size:0.65rem; cursor:pointer;
+  flex-shrink:0; transition:all .2s;
+}
+.boss-task.done .boss-task-check { background:var(--green); border-color:var(--green); }
+
+/* ===== LOSS AVERSION BANNER ===== */
+.loss-banner {
+  background:linear-gradient(135deg,var(--red),#DC2626);
+  border-radius:var(--radius-sm); padding:12px 14px; margin-bottom:12px; color:#fff;
+  display:flex; align-items:center; gap:10px;
+}
+.loss-banner.hidden { display:none; }
+.loss-icon { font-size:1.4rem; flex-shrink:0; }
+.loss-text { flex:1; font-size:0.72rem; line-height:1.4; }
+.loss-text strong { font-weight:800; }
+
+/* ===== ADMIN PANEL ===== */
+.admin-section { margin-bottom:20px; }
+.admin-title { font-family:var(--font-head); font-size:0.8rem; font-weight:800; color:var(--primary); margin-bottom:10px; letter-spacing:1px; }
+.admin-form label { display:block; font-size:0.68rem; font-weight:700; color:var(--text2); margin-bottom:4px; margin-top:10px; }
+.admin-form input, .admin-form select, .admin-form textarea {
+  width:100%; padding:8px 12px; border:1.5px solid var(--border); border-radius:8px;
+  font-family:var(--font-body); font-size:0.75rem; background:var(--sky); color:var(--text); outline:none;
+}
+.admin-form input:focus, .admin-form select:focus, .admin-form textarea:focus { border-color:var(--primary); background:var(--white); }
+.admin-form textarea { height:70px; resize:vertical; }
+.admin-btn {
+  margin-top:12px; width:100%; padding:11px; border:none; border-radius:10px;
+  font-family:var(--font-body); font-weight:800; font-size:0.8rem; cursor:pointer;
+  transition:all .2s;
+}
+.admin-btn-primary { background:linear-gradient(135deg,var(--primary),var(--primary-d)); color:#fff; }
+.admin-btn-danger  { background:linear-gradient(135deg,var(--red),#DC2626); color:#fff; }
+.admin-btn:hover { transform:translateY(-1px); box-shadow:var(--shadow-lg); }
+
+.rule-item { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:var(--sky); border-radius:8px; margin-bottom:6px; }
+.rule-name { font-size:0.75rem; font-weight:700; }
+.rule-val  { font-size:0.75rem; color:var(--primary); font-weight:700; }
+.rule-edit-btn { background:none; border:1.5px solid var(--border); padding:4px 10px; border-radius:6px; font-size:0.62rem; cursor:pointer; font-family:var(--font-body); color:var(--text2); }
+
+/* ===== GRADUATE CHECKLIST ===== */
+.grad-item { display:flex; align-items:center; gap:10px; padding:10px; border-radius:8px; margin-bottom:6px; cursor:pointer; border:1.5px solid var(--border); transition:all .2s; }
+.grad-item:hover { border-color:var(--primary); }
+.grad-item.done { background:var(--green-l); border-color:var(--green); }
+.grad-checkbox { width:22px; height:22px; border-radius:6px; border:2px solid var(--border); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:0.8rem; transition:all .2s; }
+.grad-item.done .grad-checkbox { background:var(--green); border-color:var(--green); color:#fff; }
+.grad-text { font-size:0.78rem; font-weight:600; }
+.grad-item.done .grad-text { text-decoration:line-through; color:var(--text2); }
+
+/* ===== NOTIFICATIONS ===== */
+.toast-container { position:fixed; top:16px; left:50%; transform:translateX(-50%); z-index:9999; display:flex; flex-direction:column; gap:8px; pointer-events:none; width:calc(100% - 32px); max-width:380px; }
+.toast {
+  background:var(--white); border-radius:12px; padding:12px 16px; box-shadow:0 8px 24px rgba(0,0,0,.12);
+  border-left:4px solid var(--primary); font-size:0.78rem; font-weight:600;
+  display:flex; align-items:center; gap:8px;
+  animation:toastIn .3s cubic-bezier(.34,1.56,.64,1);
+  opacity:1; transition:opacity .3s;
+}
+.toast.success { border-color:var(--green); }
+.toast.warning { border-color:var(--red); }
+.toast.achievement { border-color:var(--gold); background:var(--gold-l); }
+@keyframes toastIn { from{transform:translateY(-20px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+/* ===== MODAL ===== */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:500; display:none; align-items:flex-end; justify-content:center; backdrop-filter:blur(4px); }
+.modal-overlay.open { display:flex; }
+.modal { background:var(--white); border-radius:24px 24px 0 0; padding:20px; width:100%; max-width:430px; max-height:85dvh; overflow-y:auto; animation:modalUp .3s cubic-bezier(.34,1.56,.64,1); }
+@media(min-width:600px){ .modal { border-radius:24px; margin-bottom:40px; } }
+@keyframes modalUp { from{transform:translateY(60px);opacity:0} to{transform:translateY(0);opacity:1} }
+.modal-title { font-family:var(--font-head); font-weight:800; font-size:1rem; color:var(--text); margin-bottom:16px; }
+.modal form label { display:block; font-size:0.68rem; font-weight:700; color:var(--text2); margin-bottom:3px; margin-top:10px; }
+.modal form input, .modal form select, .modal form textarea {
+  width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:10px;
+  font-family:var(--font-body); font-size:0.8rem; background:var(--sky); color:var(--text); outline:none;
+}
+.modal form input:focus, .modal form select:focus { border-color:var(--primary); background:var(--white); }
+.modal form textarea { height:70px; resize:vertical; }
+.modal-btns { display:flex; gap:8px; margin-top:16px; }
+.modal-btns button { flex:1; padding:12px; border:none; border-radius:10px; font-family:var(--font-body); font-weight:800; font-size:0.8rem; cursor:pointer; }
+.btn-primary { background:linear-gradient(135deg,var(--primary),var(--primary-d)); color:#fff; }
+.btn-secondary { background:var(--sky); color:var(--text2); border:1.5px solid var(--border) !important; }
+
+/* ===== RESOURCE EDIT MODAL ===== */
+.res-modal-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
+.res-modal-item { background:var(--sky); border-radius:10px; padding:12px; border:1.5px solid var(--border); }
+.res-modal-item label { font-size:0.65rem; font-weight:700; color:var(--text2); display:block; margin-bottom:6px; }
+.res-modal-item input { width:100%; padding:6px 10px; border:1.5px solid var(--border); border-radius:8px; font-family:var(--font-body); font-size:0.85rem; font-weight:700; background:var(--white); }
+
+/* ===== STAT SUMMARY ===== */
+.stat-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border); }
+.stat-row:last-child { border-bottom:none; }
+.stat-k { font-size:0.72rem; color:var(--text2); }
+.stat-v { font-size:0.75rem; font-weight:800; color:var(--primary); }
+
+/* ===== LOG ===== */
+.log-entry { display:flex; gap:8px; padding:8px 0; border-bottom:1px solid var(--border); font-size:0.7rem; }
+.log-entry:last-child { border-bottom:none; }
+.log-ts { color:var(--text3); flex-shrink:0; font-size:0.62rem; margin-top:1px; }
+.log-msg { color:var(--text); flex:1; line-height:1.4; }
+.log-xp { color:var(--green); font-weight:700; font-size:0.65rem; }
+
+/* ===== CONFIG BANNER ===== */
+.config-banner {
+  background:var(--orange-l); border:1.5px solid var(--orange); border-radius:var(--radius-sm);
+  padding:12px; margin-bottom:12px; font-size:0.72rem; color:#92400E; line-height:1.5;
+}
+.config-banner strong { display:block; font-weight:800; margin-bottom:4px; }
+.config-input-row { display:flex; gap:8px; margin-top:8px; }
+.config-input-row input { flex:1; padding:7px 10px; border:1.5px solid var(--orange); border-radius:8px; font-size:0.72rem; font-family:var(--font-body); background:var(--white); outline:none; }
+.config-input-row button { padding:7px 14px; background:var(--orange); color:#fff; border:none; border-radius:8px; font-family:var(--font-body); font-weight:700; font-size:0.72rem; cursor:pointer; }
+
+/* ===== ANIMATIONS ===== */
+@keyframes pop { 0%{transform:scale(1)} 50%{transform:scale(1.12)} 100%{transform:scale(1)} }
+@keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-4px)} 40%,80%{transform:translateX(4px)} }
+.pop { animation:pop .3s; }
+.shake { animation:shake .4s; }
+
+/* ===== MOBILE SAFE AREA ===== */
+@supports(padding: max(0px)) {
+  .tabs { padding-bottom: max(0px, env(safe-area-inset-bottom)); }
+}
+</style>
+</head>
+<body>
+
+<div class="toast-container" id="toastArea"></div>
+
+<!-- QUEST MODAL -->
+<div class="modal-overlay" id="questModal">
+  <div class="modal">
+    <div class="modal-title" id="questModalTitle">✨ Thêm Quest Mới</div>
+    <form id="questForm" onsubmit="return false">
+      <input type="hidden" id="qf_id">
+      <label>Tên nhiệm vụ *</label>
+      <input type="text" id="qf_title" placeholder="Ví dụ: Hoàn thiện chương 3 đồ án" required>
+      <label>Mô tả</label>
+      <textarea id="qf_desc" placeholder="Chi tiết về nhiệm vụ..."></textarea>
+      <label>Loại quest</label>
+      <select id="qf_type">
+        <option value="daily">Daily — Hàng ngày</option>
+        <option value="weekly">Weekly — Hàng tuần</option>
+        <option value="main">Main Quest — Quan trọng</option>
+        <option value="longterm">Long-term — Dài hạn</option>
+      </select>
+      <label>Chi phí thời gian (giờ)</label>
+      <input type="number" id="qf_time" value="1" min="0" step="0.5">
+      <label>Chi phí năng lượng (0–10)</label>
+      <input type="number" id="qf_energy" value="3" min="0" max="10">
+      <label>Phần thưởng XP khi hoàn thành</label>
+      <input type="number" id="qf_xp" value="20" min="5" step="5">
+      <label>Mô tả phần thưởng</label>
+      <input type="text" id="qf_reward" placeholder="Ví dụ: +XP Embedded, tiến độ đồ án">
+      <label>Skill liên quan</label>
+      <select id="qf_skill">
+        <option value="">— Không có —</option>
+        <option value="embedded">Embedded Linux</option>
+        <option value="ai">AI / ML</option>
+        <option value="english">English Comm.</option>
+        <option value="research">Research Writing</option>
+        <option value="softskill">Soft Skills</option>
+        <option value="finance">Financial IQ</option>
+      </select>
+      <label>Phạt nếu bỏ lỡ (HP giảm)</label>
+      <input type="number" id="qf_penalty" value="5" min="0" max="30">
+      <div class="modal-btns">
+        <button class="btn-primary" onclick="saveQuestForm()">💾 Lưu</button>
+        <button class="btn-secondary" onclick="closeModal('questModal')">Hủy</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- RESOURCE MODAL -->
+<div class="modal-overlay" id="resModal">
+  <div class="modal">
+    <div class="modal-title">📊 Cập nhật Resources</div>
+    <div class="res-modal-grid">
+      <div class="res-modal-item"><label>❤️ HP (0–100)</label><input type="number" id="rm_hp" min="0" max="100"></div>
+      <div class="res-modal-item"><label>⚡ Energy (0–100)</label><input type="number" id="rm_en" min="0" max="100"></div>
+      <div class="res-modal-item"><label>💰 Số dư (VND)</label><input type="number" id="rm_mon" min="0" step="100000"></div>
+      <div class="res-modal-item"><label>⏰ Free time (h/ngày)</label><input type="number" id="rm_time" min="0" max="24" step="0.5"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-primary" onclick="saveResources()">💾 Lưu</button>
+      <button class="btn-secondary" onclick="closeModal('resModal')">Hủy</button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-row">
+      <div>
+        <div class="player-name">⚔️ Dev Hero</div>
+        <div class="player-sub" id="topSub">Final Year · Computer Engineering</div>
+      </div>
+      <button class="sync-btn" id="syncBtn" onclick="syncToSheets()">
+        <span id="syncIcon">☁️</span> Sync
+      </button>
+    </div>
+    <div class="xp-row">
+      <div class="level-pill" id="levelPill">LV 21</div>
+      <div class="xp-bar-bg"><div class="xp-bar-fill" id="xpBarFill" style="width:34%"></div></div>
+      <div class="xp-label" id="xpBarLabel">340/1000 XP</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+      <div class="streak-badge" id="streakBadge">🔥 Streak: <strong id="streakNum">0</strong> ngày</div>
+      <div style="font-size:0.6rem;color:rgba(255,255,255,.65)" id="lastSync">Chưa sync</div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchPage('home',this)"><span class="ti">🏠</span>HOME</button>
+    <button class="tab-btn" onclick="switchPage('quests',this)"><span class="ti">⚔️</span>QUESTS</button>
+    <button class="tab-btn" onclick="switchPage('skills',this)"><span class="ti">📚</span>SKILLS</button>
+    <button class="tab-btn" onclick="switchPage('finance',this)"><span class="ti">💰</span>FINANCE</button>
+    <button class="tab-btn" onclick="switchPage('admin',this)"><span class="ti">⚙️</span>ADMIN</button>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- HOME PAGE -->
+    <div class="page active" id="page-home">
+      <!-- Loss Aversion Banner -->
+      <div class="loss-banner hidden" id="lossBanner">
+        <div class="loss-icon">⚠️</div>
+        <div class="loss-text" id="lossBannerText"></div>
+      </div>
+
+      <!-- Penalty Zone -->
+      <div class="penalty-card hidden" id="penaltyCard">
+        <div class="penalty-title">🩸 Hậu quả nếu bỏ lỡ hôm nay</div>
+        <div id="penaltyList"></div>
+      </div>
+
+      <!-- Resources -->
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>Resources <span style="font-size:0.65rem;color:var(--text3);font-weight:400;text-transform:none;margin-left:auto;cursor:pointer" onclick="openModal('resModal')">✏️ Chỉnh sửa</span></div>
+        <div class="res-grid" id="resGrid"></div>
+      </div>
+
+      <!-- Weekly Boss -->
+      <div id="bossArea"></div>
+
+      <!-- Today's Quests -->
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--orange)"></span>Nhiệm vụ hôm nay</div>
+        <div id="todayQuests"></div>
+      </div>
+
+      <!-- Graduation -->
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--gold)"></span>🎓 Graduation Checklist</div>
+        <div id="gradList"></div>
+      </div>
+
+      <!-- Activity Log -->
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--teal)"></span>Activity Log</div>
+        <div id="activityLog" style="max-height:200px;overflow-y:auto"></div>
+      </div>
+    </div>
+
+    <!-- QUESTS PAGE -->
+    <div class="page" id="page-quests">
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>Quest Board</div>
+        <div class="qtab-row">
+          <button class="qtab active" onclick="switchQTab('daily',this)">🌅 Daily</button>
+          <button class="qtab" onclick="switchQTab('weekly',this)">📅 Weekly</button>
+          <button class="qtab" onclick="switchQTab('main',this)">⭐ Main</button>
+          <button class="qtab" onclick="switchQTab('longterm',this)">🌅 Long-term</button>
+          <button class="qtab" onclick="switchQTab('done',this)">✅ Done</button>
+        </div>
+        <div id="questBoard"></div>
+        <button class="add-quest-btn" onclick="openAddQuest()">+ Thêm quest mới</button>
+      </div>
+    </div>
+
+    <!-- SKILLS PAGE -->
+    <div class="page" id="page-skills">
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--blue)"></span>Skills & XP</div>
+        <div id="skillList"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--gold)"></span>🏆 Achievements</div>
+        <div class="achieve-grid" id="achieveGrid"></div>
+      </div>
+    </div>
+
+    <!-- FINANCE PAGE -->
+    <div class="page" id="page-finance">
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--green)"></span>Financial Goals</div>
+        <div id="fundList"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--teal)"></span>Monthly Budget</div>
+        <div id="budgetStats"></div>
+      </div>
+    </div>
+
+    <!-- ADMIN PAGE -->
+    <div class="page" id="page-admin">
+      <!-- Google Sheets config -->
+      <div class="card" id="sheetsConfig">
+        <div class="card-title"><span class="dot" style="background:var(--green)"></span>☁️ Google Sheets Sync</div>
+        <div class="config-banner">
+          <strong>⚡ Cài đặt lần đầu:</strong>
+          Paste URL của Google Apps Script Web App vào đây. Xem file <code>AppsScript_Code.gs</code> để hướng dẫn deploy.
+          <div class="config-input-row">
+            <input type="text" id="sheetsUrl" placeholder="https://script.google.com/macros/s/..." oninput="checkSheetsUrl()">
+            <button onclick="saveSheetsUrl()">Lưu</button>
+          </div>
+          <div style="margin-top:6px;font-size:0.65rem" id="urlStatus"></div>
+        </div>
+        <button class="admin-btn admin-btn-primary" onclick="syncToSheets()">☁️ Sync ngay</button>
+        <button class="admin-btn" style="background:var(--sky);color:var(--primary);border:1.5px solid var(--border);margin-top:8px" onclick="loadFromSheets()">📥 Load từ Sheets</button>
+      </div>
+
+      <!-- Import/Export JSON fallback -->
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--blue)"></span>💾 Backup / Restore</div>
+        <button class="admin-btn admin-btn-primary" onclick="exportJSON()">📤 Export JSON</button>
+        <button class="admin-btn" style="background:var(--sky);color:var(--text);border:1.5px solid var(--border);margin-top:8px" onclick="document.getElementById('importFile').click()">📥 Import JSON</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
+      </div>
+
+      <!-- Game Rules -->
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--orange)"></span>⚖️ Luật chơi & Thưởng/Phạt</div>
+        <div id="rulesList"></div>
+        <div class="admin-section" style="margin-top:16px">
+          <div class="admin-form">
+            <label>Phạt HP mỗi quest bỏ lỡ</label>
+            <input type="number" id="rule_penalty_hp" min="0" max="30">
+            <label>Thưởng XP hoàn thành tất cả daily</label>
+            <input type="number" id="rule_perfect_xp" min="0" max="200">
+            <label>Thưởng streak 7 ngày (XP)</label>
+            <input type="number" id="rule_streak7_xp" min="0" max="500">
+            <label>Boss HP mỗi tuần</label>
+            <input type="number" id="rule_boss_hp" min="0" max="20">
+            <button class="admin-btn admin-btn-primary" onclick="saveRules()">💾 Lưu luật chơi</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manage Skills -->
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--blue)"></span>🛠 Quản lý Skills & Quests</div>
+        <button class="admin-btn admin-btn-primary" onclick="openAddQuest()">➕ Thêm Quest mới</button>
+        <button class="admin-btn" style="background:var(--sky);color:var(--primary);border:1.5px solid var(--border);margin-top:8px" onclick="resetDailyQuests()">🔄 Reset Daily Quests</button>
+        <button class="admin-btn admin-btn-danger" style="margin-top:8px" onclick="confirmReset()">⚠️ Reset Toàn bộ Game</button>
+      </div>
+
+      <!-- Stats -->
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>📊 Statistics</div>
+        <div id="adminStats"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+'use strict';
+// =========================================================
+// DATA LAYER — all data manipulation, no DOM
+// =========================================================
+
+const DEFAULT_STATE = {
+  version: 2,
+  playerName: "Dev Hero",
+  level: 21,
+  xp: 340,
+  streak: 0,
+  streakLastDate: null,
+  streakBrokenAt: null,
+  resources: { hp: 75, en: 60, mon: 2400000, time: 3.5 },
+  skills: [
+    { id:'embedded', name:'Embedded Linux', icon:'🔧', color:'#6C63FF', bg:'#EEF4FF', lv:3, xp:210, maxXp:400 },
+    { id:'ai',       name:'AI / ML',        icon:'🧠', color:'#3B82F6', bg:'#DBEAFE', lv:2, xp:90,  maxXp:300 },
+    { id:'english',  name:'English Comm.',  icon:'🗣', color:'#10B981', bg:'#D1FAE5', lv:3, xp:270, maxXp:400 },
+    { id:'research', name:'Research Writing',icon:'📄',color:'#F97316', bg:'#FFEDD5', lv:1, xp:50,  maxXp:200 },
+    { id:'softskill',name:'Soft Skills',    icon:'🤝', color:'#EC4899', bg:'#FCE7F3', lv:2, xp:130, maxXp:300 },
+    { id:'finance',  name:'Financial IQ',   icon:'💹', color:'#14B8A6', bg:'#CCFBF1', lv:1, xp:30,  maxXp:200 },
+  ],
+  quests: {
+    daily: [
+      { id:1, title:'Đi intern Embedded Linux / AI', desc:'8–16h, gặp mentor, code thật, học thật. Ghi lại 1 điều học được.', reward:'+ Embedded/AI XP', skillId:'embedded', costTime:7, costEnergy:7, xpReward:30, penalty:8, done:false },
+      { id:2, title:'Ca làm trung tâm Tiếng Anh', desc:'PT 17:30–21:30. Hỗ trợ phòng đào tạo, giao tiếp chuyên nghiệp.', reward:'+ English XP, tiền lương', skillId:'english', costTime:4, costEnergy:4, xpReward:20, penalty:5, done:false },
+      { id:3, title:'Review ngày & planning 15 phút', desc:'Tối: viết 3 điều đã làm được, 1 điều chưa làm, kế hoạch ngày mai.', reward:'+ Soft Skills XP, clarity', skillId:'softskill', costTime:0.25, costEnergy:1, xpReward:15, penalty:3, done:false },
+      { id:4, title:'Vận động 20 phút', desc:'Đi bộ, tập nhẹ, giãn cơ. Bảo vệ health — nền tảng của mọi thứ.', reward:'+5 HP, +10 EN ngày mai', skillId:null, costTime:0.3, costEnergy:2, xpReward:10, penalty:5, done:false },
+    ],
+    weekly: [
+      { id:5, title:'Gặp GVHD đồ án', desc:'Báo cáo tiến độ, nhận feedback. Chuẩn bị slides/notes trước.', reward:'+ Research XP, tiến độ đồ án', skillId:'research', costTime:2, costEnergy:5, xpReward:40, penalty:15, done:false },
+      { id:6, title:'Viết 1–2 trang đồ án', desc:'Thêm nội dung thực chất vào luận văn hoặc bài báo nghiên cứu.', reward:'+ Research XP, tiến độ tốt nghiệp', skillId:'research', costTime:3, costEnergy:6, xpReward:35, penalty:12, done:false },
+      { id:7, title:'Tìm cuộc thi học thuật phù hợp', desc:'Search conference/competition phù hợp chuyên ngành để nộp giấy NCKH.', reward:'Unlock quest thi học thuật', skillId:'research', costTime:1, costEnergy:3, xpReward:25, penalty:0, done:false },
+      { id:8, title:'Đọc 1 paper kỹ thuật', desc:'Embedded, AI, hoặc liên quan đồ án. Ghi tóm tắt 3 dòng.', reward:'+ Embedded/AI XP, ý tưởng mới', skillId:'embedded', costTime:1.5, costEnergy:4, xpReward:20, penalty:0, done:false },
+    ],
+    main: [
+      { id:9,  title:'🎓 Hoàn thành đồ án tốt nghiệp', desc:'Viết đủ các chương, demo chạy được, bảo vệ thành công.', reward:'Tốt nghiệp + tất cả Skills XP lớn', skillId:'research', costTime:0, costEnergy:0, xpReward:500, penalty:0, done:false },
+      { id:10, title:'📰 Nộp bài báo NCKH', desc:'Hoàn thiện và submit bài báo để lấy minh chứng tốt nghiệp.', reward:'Đủ điều kiện tốt nghiệp + Research LV', skillId:'research', costTime:0, costEnergy:0, xpReward:300, penalty:0, done:false },
+      { id:11, title:'🏆 Tham gia cuộc thi học thuật', desc:'Nộp paper/project vào cuộc thi, lấy giấy NCKH chính thức.', reward:'Giấy NCKH + credibility', skillId:'research', costTime:0, costEnergy:0, xpReward:250, penalty:0, done:false },
+      { id:12, title:'💼 Full-time sau tốt nghiệp', desc:'Apply job ≥ 12–15M/tháng với portfolio mạnh.', reward:'+ Thu nhập, tăng tốc tài chính', skillId:'embedded', costTime:0, costEnergy:0, xpReward:400, penalty:0, done:false },
+    ],
+    longterm: [
+      { id:13, title:'🛡️ Quỹ dự phòng 12 tháng', desc:'42,000,000đ — bảo vệ khỏi rủi ro, ngủ ngon không lo lắng.', reward:'Bảo vệ tài chính tuyệt đối', skillId:'finance', costTime:0, costEnergy:0, xpReward:300, penalty:0, done:false },
+      { id:14, title:'💰 Quỹ sinking', desc:'Sau dự phòng: tích tiền có kế hoạch cho các khoản lớn.', reward:'Tự do chi tiêu, không vay nợ', skillId:'finance', costTime:0, costEnergy:0, xpReward:150, penalty:0, done:false },
+      { id:15, title:'📈 Bắt đầu đầu tư', desc:'ETF / cổ phiếu, học tài chính. Hành trình tự do tài chính bắt đầu từ đây.', reward:'Passive income, tự do dài hạn', skillId:'finance', costTime:0, costEnergy:0, xpReward:200, penalty:0, done:false },
+      { id:16, title:'🚀 Senior Engineer', desc:'Chuyên gia Embedded/AI, lương cao, được tôn trọng trong ngành.', reward:'Max skills, impact thực sự', skillId:'embedded', costTime:0, costEnergy:0, xpReward:500, penalty:0, done:false },
+    ],
+  },
+  funds: [
+    { name:'💳 Tài khoản hàng ngày', current:2400000, target:3000000, note:'Buffer thoải mái tháng', colors:['#6C63FF','#A78BFA'] },
+    { name:'🛡️ Quỹ dự phòng',       current:1500000, target:42000000, note:'12 × ~3.5M chi tiêu tối thiểu', colors:['#F59E0B','#FCD34D'] },
+    { name:'🎯 Quỹ sinking',         current:0,       target:10000000, note:'Sắm sửa, nâng cấp kế hoạch', colors:['#10B981','#34D399'] },
+    { name:'📈 Quỹ đầu tư',          current:0,       target:50000000, note:'Khởi động sau khi đủ dự phòng', colors:['#14B8A6','#2DD4BF'] },
+  ],
+  gradItems: [
+    { text:'Hoàn thành tất cả môn học', done:true },
+    { text:'Đồ án được duyệt đề tài', done:true },
+    { text:'Viết xong 50% luận văn', done:false },
+    { text:'Bài báo NCKH hoàn thiện', done:false },
+    { text:'Tìm được cuộc thi học thuật', done:false },
+    { text:'Nộp paper thi học thuật', done:false },
+    { text:'Bảo vệ đồ án thành công', done:false },
+  ],
+  achievements: [
+    { id:'first_quest',   name:'First Blood',     icon:'⚔️', desc:'Hoàn thành quest đầu tiên',      unlocked:false, xpBonus:50 },
+    { id:'streak_7',      name:'7-Day Warrior',   icon:'🔥', desc:'Streak 7 ngày liên tiếp',         unlocked:false, xpBonus:100 },
+    { id:'streak_30',     name:'Iron Will',        icon:'💎', desc:'Streak 30 ngày',                  unlocked:false, xpBonus:300 },
+    { id:'skill_lv5',     name:'Expert',           icon:'🎓', desc:'Một skill đạt LV 5',              unlocked:false, xpBonus:150 },
+    { id:'fund_25pct',    name:'Saver',            icon:'🐷', desc:'Quỹ dự phòng đạt 25%',           unlocked:false, xpBonus:80 },
+    { id:'thesis_done',   name:'Scholar',          icon:'📜', desc:'Hoàn thành đồ án tốt nghiệp',    unlocked:false, xpBonus:500 },
+    { id:'perfect_week',  name:'Perfect Week',     icon:'🌟', desc:'Hoàn thành tất cả daily 7 ngày', unlocked:false, xpBonus:200 },
+    { id:'boss_slayer',   name:'Boss Slayer',      icon:'🐉', desc:'Hạ Boss tuần đầu tiên',          unlocked:false, xpBonus:120 },
+    { id:'level_30',      name:'Veteran',          icon:'🏆', desc:'Đạt LV 30',                      unlocked:false, xpBonus:200 },
+  ],
+  boss: { name:'Tuần này: Đồ Án Boss', hp:5, maxHp:5, tasks:[
+    { text:'Gặp GVHD', done:false },
+    { text:'Viết 2 trang mới', done:false },
+    { text:'Review code intern', done:false },
+    { text:'Đọc 1 paper', done:false },
+    { text:'Lên kế hoạch tuần sau', done:false },
+  ]},
+  rules: { penaltyHp:5, perfectDayXp:30, streak7Xp:100, bossMaxHp:5 },
+  log: [],
+  sheetsUrl: '',
+  lastSync: null,
+};
+
+// =========================================================
+// STATE MANAGEMENT
+// =========================================================
+let S = loadState();
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem('lifeRPGv2');
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_STATE));
+}
+
+function save() {
+  localStorage.setItem('lifeRPGv2', JSON.stringify(S));
+}
+
+function addLog(message, type='info', xpDelta=0) {
+  const entry = { ts: new Date().toISOString(), message, type, xpDelta };
+  S.log.unshift(entry);
+  if (S.log.length > 200) S.log = S.log.slice(0, 200);
+  save();
+  renderLog();
+}
+
+// =========================================================
+// XP & LEVEL
+// =========================================================
+function xpNeeded(lv) { return lv * 50 + 500; }
+
+function gainXP(amount, source='') {
+  S.xp += amount;
+  const needed = xpNeeded(S.level);
+  let leveled = false;
+  while (S.xp >= xpNeeded(S.level)) {
+    S.xp -= xpNeeded(S.level);
+    S.level++;
+    leveled = true;
+    toast(`🎉 LEVEL UP! Bạn đạt LV ${S.level}!`, 'achievement');
+    checkAchievement('level_30');
+  }
+  save();
+  renderTopBar();
+  return leveled;
+}
+
+function loseXP(amount) {
+  S.xp = Math.max(0, S.xp - amount);
+  save();
+  renderTopBar();
+}
+
+// =========================================================
+// STREAK
+// =========================================================
+function checkStreak() {
+  const today = new Date().toDateString();
+  if (S.streakLastDate === today) return; // already counted today
+
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  const allDailyDone = S.quests.daily.every(q => q.done);
+
+  if (allDailyDone) {
+    if (S.streakLastDate === yesterday || !S.streakLastDate) {
+      S.streak = (S.streak || 0) + 1;
+      S.streakLastDate = today;
+      if (S.streak === 7) { checkAchievement('streak_7'); gainXP(S.rules.streak7Xp, 'streak_7'); toast(`🔥 7-Day Streak! +${S.rules.streak7Xp} XP bonus!`, 'achievement'); }
+      if (S.streak === 30) checkAchievement('streak_30');
+    }
+  } else {
+    // Streak break detection
+    if (S.streakLastDate && S.streakLastDate !== today && S.streakLastDate !== yesterday) {
+      breakStreak();
+    }
+  }
+  save();
+  renderTopBar();
+}
+
+function breakStreak() {
+  const lost = S.streak;
+  S.streak = 0;
+  S.streakBrokenAt = new Date().toISOString();
+  if (lost > 0) {
+    toast(`💔 Streak ${lost} ngày bị phá! Mất ${lost * 5} XP bonus tích lũy.`, 'warning');
+    loseXP(lost * 5);
+    addLog(`STREAK BROKEN: ${lost} ngày streak bị mất`, 'penalty', -(lost*5));
+  }
+}
+
+// =========================================================
+// ACHIEVEMENTS
+// =========================================================
+function checkAchievement(id) {
+  const a = S.achievements.find(x => x.id === id);
+  if (!a || a.unlocked) return;
+
+  // Condition checks
+  const conds = {
+    'first_quest':  () => Object.values(S.quests).flat().some(q => q.done),
+    'streak_7':     () => S.streak >= 7,
+    'streak_30':    () => S.streak >= 30,
+    'skill_lv5':    () => S.skills.some(s => s.lv >= 5),
+    'fund_25pct':   () => S.funds[1].current / S.funds[1].target >= 0.25,
+    'thesis_done':  () => S.quests.main.find(q => q.id === 9)?.done,
+    'perfect_week': () => S.streak >= 7,
+    'boss_slayer':  () => S.boss.tasks.every(t => t.done),
+    'level_30':     () => S.level >= 30,
+  };
+  if (conds[id] && conds[id]()) {
+    a.unlocked = true;
+    toast(`🏆 Achievement unlocked: "${a.name}"! +${a.xpBonus} XP`, 'achievement');
+    gainXP(a.xpBonus, 'achievement');
+    addLog(`Achievement: ${a.name}`, 'achievement', a.xpBonus);
+    if (S.sheetsUrl) postToSheets({ action:'unlockAchieve', achieve:{ id:a.id, name:a.name, description:a.desc, icon:a.icon, xpBonus:a.xpBonus } });
+    save();
+    renderAchievements();
+  }
+}
+
+function checkAllAchievements() {
+  S.achievements.forEach(a => checkAchievement(a.id));
+}
+
+// =========================================================
+// QUEST COMPLETE
+// =========================================================
+function completeQuest(type, id) {
+  const q = S.quests[type].find(x => x.id === id);
+  if (!q || q.done) return;
+  q.done = true;
+
+  // Resources
+  S.resources.en = Math.max(0, S.resources.en - q.costEnergy);
+
+  // XP
+  gainXP(q.xpReward, 'quest');
+
+  // Skill XP
+  if (q.skillId) {
+    addSkillXPById(q.skillId, Math.round(q.xpReward * 0.6));
+  }
+
+  toast(`✅ "${q.title}" hoàn thành! +${q.xpReward} XP`, 'success');
+  addLog(`Quest done: "${q.title}"`, 'quest', q.xpReward);
+
+  if (S.sheetsUrl) postToSheets({ action:'completeQuest', quest:{ id:q.id, title:q.title, type, xpEarned:q.xpReward } });
+
+  // Check perfect day
+  if (type === 'daily' && S.quests.daily.every(x => x.done)) {
+    gainXP(S.rules.perfectDayXp, 'perfect_day');
+    toast(`🌟 Perfect Day! Tất cả daily done! +${S.rules.perfectDayXp} XP bonus!`, 'achievement');
+    checkStreak();
+  }
+
+  checkAllAchievements();
+  save();
+  renderAll();
+}
+
+// =========================================================
+// SKILL XP
+// =========================================================
+function addSkillXPById(skillId, amount) {
+  const s = S.skills.find(x => x.id === skillId);
+  if (!s) return;
+  s.xp += amount;
+  let leveled = false;
+  while (s.xp >= s.maxXp) { s.xp -= s.maxXp; s.lv++; s.maxXp = Math.round(s.maxXp * 1.5); leveled = true; }
+  if (leveled) { toast(`📚 ${s.name} lên LV ${s.lv}!`, 'achievement'); checkAchievement('skill_lv5'); }
+  if (S.sheetsUrl) postToSheets({ action:'updateSkill', skill:{ id:s.id, name:s.name, level:s.lv, xp:s.xp, xpAdded:amount } });
+  save();
+}
+
+function promptSkillXP(skillId) {
+  const s = S.skills.find(x => x.id === skillId);
+  if (!s) return;
+  const amount = parseInt(prompt(`+XP cho "${s.name}"\nLV${s.lv} | ${s.xp}/${s.maxXp} XP\nNhập số XP (5–50):`) || 0);
+  if (!amount || amount <= 0 || amount > 50) return;
+  addSkillXPById(skillId, amount);
+  gainXP(amount);
+  addLog(`+${amount} XP → ${s.name}`, 'skill', amount);
+  renderSkills();
+}
+
+// =========================================================
+// FUND UPDATE
+// =========================================================
+function updateFund(idx) {
+  const input = document.getElementById(`fi_${idx}`);
+  const val = parseFloat(input.value.replace(/[^0-9.-]/g,''));
+  if (isNaN(val)) return;
+  S.funds[idx].current = Math.max(0, S.funds[idx].current + val);
+  input.value = '';
+  toast(`💰 ${S.funds[idx].name} cập nhật`, 'success');
+  addLog(`Fund "${S.funds[idx].name}": ${val >= 0 ? '+' : ''}${fmt(val)}đ → ${fmt(S.funds[idx].current)}đ`, 'fund', 0);
+  if (S.sheetsUrl) postToSheets({ action:'updateFund', fund:{ name:S.funds[idx].name, amount:val, balance:S.funds[idx].current } });
+  checkAchievement('fund_25pct');
+  save();
+  renderFunds();
+}
+
+// =========================================================
+// LOSS AVERSION ENGINE
+// =========================================================
+function computeLossWarning() {
+  const missedDaily = S.quests.daily.filter(q => !q.done);
+  if (missedDaily.length === 0) return null;
+
+  const totalPenaltyHp  = missedDaily.reduce((a,q) => a + (q.penalty||0), 0);
+  const totalPenaltyXp  = missedDaily.length * 10;
+  const streakAtRisk    = S.streak > 0;
+  const streakLossXp    = streakAtRisk ? S.streak * 5 : 0;
+
+  let msg = ``;
+  if (streakAtRisk) msg += `<strong>🔥 Streak ${S.streak} ngày đang bị đe dọa!</strong> `;
+  msg += `Nếu không hoàn thành ${missedDaily.length} quest còn lại hôm nay: `;
+  msg += `mất ${totalPenaltyHp} HP, ${totalPenaltyXp + streakLossXp} XP`;
+  if (streakAtRisk) msg += ` và toàn bộ chuỗi ${S.streak} ngày sẽ về 0!`;
+
+  return msg;
+}
+
+function computePenaltyPreview() {
+  return S.quests.daily
+    .filter(q => !q.done)
+    .map(q => `⚠️ Bỏ "${q.title}" → -${q.penalty} HP, -10 XP`);
+}
+
+// =========================================================
+// GOOGLE SHEETS SYNC
+// =========================================================
+async function syncToSheets() {
+  if (!S.sheetsUrl) { toast('⚠️ Chưa cài đặt Sheets URL. Vào tab Admin.', 'warning'); return; }
+  const btn = document.getElementById('syncBtn');
+  btn.classList.add('syncing');
+  document.getElementById('syncIcon').textContent = '⏳';
+  try {
+    const res = await postToSheets({ action:'saveState', data: S });
+    S.lastSync = new Date().toISOString();
+    save();
+    document.getElementById('lastSync').textContent = 'Synced ' + new Date().toLocaleTimeString('vi-VN');
+    toast('☁️ Đã sync lên Google Sheets!', 'success');
+  } catch(e) {
+    toast('❌ Sync thất bại. Kiểm tra URL.', 'warning');
+  }
+  btn.classList.remove('syncing');
+  document.getElementById('syncIcon').textContent = '☁️';
+}
+
+async function loadFromSheets() {
+  if (!S.sheetsUrl) { toast('⚠️ Chưa cài đặt Sheets URL.', 'warning'); return; }
+  try {
+    const res = await fetch(`${S.sheetsUrl}?action=getState`);
+    const data = await res.json();
+    if (data.success && data.data) {
+      S = data.data;
+      save();
+      renderAll();
+      toast('📥 Đã tải dữ liệu từ Sheets!', 'success');
+    } else {
+      toast('⚠️ Không có dữ liệu trên Sheets.', 'warning');
+    }
+  } catch(e) {
+    toast('❌ Load thất bại.', 'warning');
+  }
+}
+
+async function postToSheets(payload) {
+  if (!S.sheetsUrl) return;
+  return fetch(S.sheetsUrl, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+    headers: { 'Content-Type': 'application/json' }
+  }).then(r => r.json());
+}
+
+function saveSheetsUrl() {
+  const url = document.getElementById('sheetsUrl').value.trim();
+  if (!url.startsWith('https://script.google.com')) { document.getElementById('urlStatus').textContent = '❌ URL không hợp lệ'; return; }
+  S.sheetsUrl = url;
+  save();
+  document.getElementById('urlStatus').textContent = '✅ Đã lưu URL';
+  toast('✅ Sheets URL đã lưu!', 'success');
+}
+
+function checkSheetsUrl() {
+  const url = document.getElementById('sheetsUrl').value.trim();
+  const st = document.getElementById('urlStatus');
+  if (!url) { st.textContent = ''; return; }
+  st.textContent = url.startsWith('https://script.google.com') ? '✅ URL hợp lệ' : '❌ Phải bắt đầu bằng https://script.google.com';
+}
+
+// =========================================================
+// BOSS BATTLE
+// =========================================================
+function toggleBossTask(idx) {
+  const t = S.boss.tasks[idx];
+  t.done = !t.done;
+  S.boss.hp = S.boss.tasks.filter(t => !t.done).length;
+  if (S.boss.hp <= 0) {
+    gainXP(150, 'boss');
+    toast('🐉 BOSS DEFEATED! +150 XP! Tuần này bạn làm chủ!', 'achievement');
+    checkAchievement('boss_slayer');
+    addLog('Boss tuần bị hạ gục!', 'achievement', 150);
+  }
+  save();
+  renderBoss();
+}
+
+// =========================================================
+// ADMIN ACTIONS
+// =========================================================
+function saveRules() {
+  S.rules.penaltyHp  = parseInt(document.getElementById('rule_penalty_hp').value) || 5;
+  S.rules.perfectDayXp = parseInt(document.getElementById('rule_perfect_xp').value) || 30;
+  S.rules.streak7Xp  = parseInt(document.getElementById('rule_streak7_xp').value) || 100;
+  S.rules.bossMaxHp  = parseInt(document.getElementById('rule_boss_hp').value) || 5;
+  save();
+  toast('⚖️ Đã lưu luật chơi!', 'success');
+}
+
+function resetDailyQuests() {
+  if (!confirm('Reset tất cả daily quest về chưa làm?')) return;
+  S.quests.daily.forEach(q => q.done = false);
+  S.resources.en = Math.min(100, S.resources.en + 30);
+  save();
+  renderAll();
+  toast('🔄 Daily quests đã reset!', 'success');
+}
+
+function confirmReset() {
+  if (!confirm('⚠️ XÓA TOÀN BỘ dữ liệu và bắt đầu lại? (Không thể hoàn tác)')) return;
+  if (!confirm('Chắc chắn? Dữ liệu sẽ mất hoàn toàn.')) return;
+  S = JSON.parse(JSON.stringify(DEFAULT_STATE));
+  save();
+  renderAll();
+  toast('🔄 Game đã reset!', 'success');
+}
+
+function saveResources() {
+  const hp  = parseFloat(document.getElementById('rm_hp').value);
+  const en  = parseFloat(document.getElementById('rm_en').value);
+  const mon = parseFloat(document.getElementById('rm_mon').value);
+  const tm  = parseFloat(document.getElementById('rm_time').value);
+  if (!isNaN(hp))  { S.resources.hp  = Math.max(0,Math.min(100,hp)); }
+  if (!isNaN(en))  { S.resources.en  = Math.max(0,Math.min(100,en)); }
+  if (!isNaN(mon)) { S.resources.mon = Math.max(0,mon); }
+  if (!isNaN(tm))  { S.resources.time= Math.max(0,Math.min(24,tm)); }
+  save();
+  closeModal('resModal');
+  renderResources();
+  toast('📊 Resources đã cập nhật!', 'success');
+}
+
+// =========================================================
+// QUEST FORM (ADD/EDIT)
+// =========================================================
+let editingQuestType = null;
+
+function openAddQuest(type='daily') {
+  editingQuestType = type;
+  document.getElementById('questModalTitle').textContent = '✨ Thêm Quest Mới';
+  document.getElementById('qf_id').value = '';
+  document.getElementById('qf_title').value = '';
+  document.getElementById('qf_desc').value = '';
+  document.getElementById('qf_type').value = type;
+  document.getElementById('qf_time').value = 1;
+  document.getElementById('qf_energy').value = 3;
+  document.getElementById('qf_xp').value = 20;
+  document.getElementById('qf_reward').value = '';
+  document.getElementById('qf_skill').value = '';
+  document.getElementById('qf_penalty').value = 5;
+  openModal('questModal');
+}
+
+function openEditQuest(type, id) {
+  const q = S.quests[type].find(x => x.id === id);
+  if (!q) return;
+  editingQuestType = type;
+  document.getElementById('questModalTitle').textContent = '✏️ Chỉnh sửa Quest';
+  document.getElementById('qf_id').value = id;
+  document.getElementById('qf_title').value = q.title;
+  document.getElementById('qf_desc').value = q.desc;
+  document.getElementById('qf_type').value = type;
+  document.getElementById('qf_time').value = q.costTime;
+  document.getElementById('qf_energy').value = q.costEnergy;
+  document.getElementById('qf_xp').value = q.xpReward;
+  document.getElementById('qf_reward').value = q.reward;
+  document.getElementById('qf_skill').value = q.skillId || '';
+  document.getElementById('qf_penalty').value = q.penalty;
+  openModal('questModal');
+}
+
+function saveQuestForm() {
+  const title = document.getElementById('qf_title').value.trim();
+  if (!title) { toast('Nhập tên quest!', 'warning'); return; }
+  const type    = document.getElementById('qf_type').value;
+  const existId = parseInt(document.getElementById('qf_id').value);
+  const newQ = {
+    id:         existId || Date.now(),
+    title,
+    desc:       document.getElementById('qf_desc').value,
+    reward:     document.getElementById('qf_reward').value || '+XP',
+    skillId:    document.getElementById('qf_skill').value || null,
+    costTime:   parseFloat(document.getElementById('qf_time').value) || 0,
+    costEnergy: parseFloat(document.getElementById('qf_energy').value) || 0,
+    xpReward:   parseInt(document.getElementById('qf_xp').value) || 20,
+    penalty:    parseInt(document.getElementById('qf_penalty').value) || 0,
+    done:       false,
+  };
+
+  if (existId) {
+    // Find and replace in any type
+    for (const t of Object.keys(S.quests)) {
+      const idx = S.quests[t].findIndex(x => x.id === existId);
+      if (idx !== -1) { S.quests[t].splice(idx,1); break; }
+    }
+  }
+  if (!S.quests[type]) S.quests[type] = [];
+  S.quests[type].push(newQ);
+  save();
+  closeModal('questModal');
+  renderAll();
+  toast(`✅ Quest "${title}" đã lưu!`, 'success');
+}
+
+function deleteQuest(type, id) {
+  if (!confirm('Xóa quest này?')) return;
+  S.quests[type] = S.quests[type].filter(x => x.id !== id);
+  save();
+  renderAll();
+  toast('🗑️ Quest đã xóa', 'success');
+}
+
+// =========================================================
+// IMPORT / EXPORT
+// =========================================================
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(S, null, 2)], { type:'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `liferpg_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('📤 Đã export!', 'success');
+}
+
+function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!confirm('Import sẽ ghi đè toàn bộ dữ liệu hiện tại. Tiếp tục?')) return;
+      S = data;
+      save();
+      renderAll();
+      toast('📥 Import thành công!', 'success');
+    } catch(err) { toast('❌ File JSON không hợp lệ', 'warning'); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// =========================================================
+// GRAD CHECKLIST
+// =========================================================
+function toggleGrad(i) {
+  S.gradItems[i].done = !S.gradItems[i].done;
+  if (S.gradItems[i].done) {
+    gainXP(30, 'graduation');
+    toast(`🎓 "${S.gradItems[i].text}" hoàn thành! +30 XP`, 'success');
+    addLog(`Graduation: ✔ ${S.gradItems[i].text}`, 'grad', 30);
+    if (S.gradItems[i].text.includes('Bảo vệ đồ án')) checkAchievement('thesis_done');
+  }
+  save();
+  renderGrad();
+}
+
+// =========================================================
+// RENDER FUNCTIONS
+// =========================================================
+function fmt(n) { return Math.abs(n) >= 1000000 ? (n/1000000).toFixed(1)+'M' : n.toLocaleString('vi-VN'); }
+function fmtMoney(n) { return n.toLocaleString('vi-VN') + 'đ'; }
+function clamp(v,min,max) { return Math.min(max,Math.max(min,v)); }
+
+function renderTopBar() {
+  const need = xpNeeded(S.level);
+  const pct  = Math.round(clamp(S.xp / need, 0, 1) * 100);
+  document.getElementById('levelPill').textContent = `LV ${S.level}`;
+  document.getElementById('xpBarFill').style.width = pct + '%';
+  document.getElementById('xpBarLabel').textContent = `${S.xp}/${need} XP`;
+  const sb = document.getElementById('streakBadge');
+  document.getElementById('streakNum').textContent = S.streak;
+  sb.className = 'streak-badge' + (S.streak === 0 ? ' danger' : '');
+  if (S.lastSync) document.getElementById('lastSync').textContent = 'Synced ' + new Date(S.lastSync).toLocaleTimeString('vi-VN');
+}
+
+function renderResources() {
+  const { hp, en, mon, time } = S.resources;
+  document.getElementById('resGrid').innerHTML = `
+    ${resBox('hp','❤️','HP',hp,100,'#EF4444','Sức khỏe cơ thể & tinh thần','tap:resModal')}
+    ${resBox('en','⚡','Energy',en,100,'#F59E0B','Reset mỗi sáng. Dùng để làm việc.','tap:resModal')}
+    ${resBox('mon','💰','Tiền',0,100,'#10B981',fmtMoney(mon),'tap:resModal',fmtMoney(mon))}
+    ${resBox('time','⏰','Free Time',0,100,'#6C63FF',`${time}h/ngày`,'tap:resModal',`${time}h`)}
+  `;
+}
+
+function resBox(id, icon, name, val, max, color, note, tap, displayVal) {
+  const pct = clamp(Math.round(val/max*100),0,100);
+  const dv = displayVal || val;
+  return `<div class="res-box res-tap" onclick="openModal('resModal')">
+    <div class="res-box-top">
+      <span class="res-icon">${icon}</span>
+      <span class="res-name">${name}</span>
+    </div>
+    <div class="res-num">${dv}</div>
+    ${!displayVal ? `<div class="mini-bar"><div class="mini-bar-fill" style="width:${pct}%;background:${color}"></div></div>` : ''}
+    <div class="res-note">${note}</div>
+  </div>`;
+}
+
+function renderLossWarning() {
+  const banner = document.getElementById('lossBanner');
+  const warning = computeLossWarning();
+  if (warning) {
+    banner.classList.remove('hidden');
+    document.getElementById('lossBannerText').innerHTML = warning;
+    // Penalty preview
+    const pc = document.getElementById('penaltyCard');
+    const pl = document.getElementById('penaltyList');
+    const items = computePenaltyPreview();
+    if (items.length > 0) {
+      pc.classList.remove('hidden');
+      pl.innerHTML = items.map(i => `<div class="penalty-item"><span>▸</span>${i}</div>`).join('');
+    } else { pc.classList.add('hidden'); }
+  } else {
+    banner.classList.add('hidden');
+    document.getElementById('penaltyCard')?.classList.add('hidden');
+  }
+}
+
+function renderBoss() {
+  const area = document.getElementById('bossArea');
+  if (!S.boss) { area.innerHTML = ''; return; }
+  const b = S.boss;
+  const hpPct = Math.round(b.hp / b.maxHp * 100);
+  area.innerHTML = `
+    <div class="boss-card">
+      <div class="boss-name">🐉 ${b.name}</div>
+      <div class="boss-sub">Hoàn thành tất cả tasks để hạ Boss tuần này!</div>
+      <div class="boss-hp-bar"><div class="boss-hp-fill" style="width:${hpPct}%"></div></div>
+      <div style="font-size:0.62rem;color:rgba(255,255,255,.5);margin-bottom:8px">Boss HP: ${b.hp}/${b.maxHp}</div>
+      <div class="boss-tasks">
+        ${b.tasks.map((t,i) => `
+          <div class="boss-task ${t.done?'done':''}">
+            <div class="boss-task-check" onclick="toggleBossTask(${i})">${t.done?'✓':''}</div>
+            <span style="${t.done?'text-decoration:line-through;opacity:.5':''}">${t.text}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+}
+
+function renderTodayQuests() {
+  const el = document.getElementById('todayQuests');
+  const daily = S.quests.daily;
+  el.innerHTML = daily.map(q => questCard(q, 'daily', true)).join('');
+}
+
+function questCard(q, type, compact=false) {
+  const typeLabels = {daily:'Daily',weekly:'Weekly',main:'Main',longterm:'Long-term'};
+  return `<div class="quest-item ${q.done?'done':''}" id="qcard_${q.id}">
+    <div class="quest-top">
+      <div class="quest-title">${q.title}</div>
+      <div class="type-pill type-${type}">${typeLabels[type]}</div>
+    </div>
+    <div class="quest-desc">${q.desc}</div>
+    <div class="quest-tags">
+      ${q.costTime > 0 ? `<span class="tag tag-cost">⏰ -${q.costTime}h</span>` : ''}
+      ${q.costEnergy > 0 ? `<span class="tag tag-cost">⚡ -${q.costEnergy} EN</span>` : ''}
+      <span class="tag tag-reward">✨ +${q.xpReward} XP</span>
+      ${q.reward ? `<span class="tag tag-reward">${q.reward}</span>` : ''}
+      ${q.penalty > 0 ? `<span class="tag tag-cost">💀 Bỏ: -${q.penalty} HP</span>` : ''}
+      ${q.skillId ? `<span class="tag tag-skill">📚 ${q.skillId}</span>` : ''}
+    </div>
+    ${!q.done
+      ? `<button class="do-btn" onclick="completeQuest('${type}',${q.id})">⚔️ HOÀN THÀNH</button>`
+      : `<div class="done-check">✅ Đã xong</div>`
+    }
+    ${!compact ? `<div style="display:flex;gap:6px;margin-top:6px">
+      <button style="flex:1;padding:5px;border:1.5px solid var(--border);border-radius:6px;background:none;font-size:0.62rem;cursor:pointer;font-family:var(--font-body);color:var(--text2)" onclick="openEditQuest('${type}',${q.id})">✏️ Sửa</button>
+      <button style="flex:1;padding:5px;border:1.5px solid var(--red-l);border-radius:6px;background:none;font-size:0.62rem;cursor:pointer;font-family:var(--font-body);color:var(--red)" onclick="deleteQuest('${type}',${q.id})">🗑️ Xóa</button>
+    </div>` : ''}
+  </div>`;
+}
+
+let currentQTab = 'daily';
+function switchQTab(tab, btn) {
+  currentQTab = tab;
+  document.querySelectorAll('.qtab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderQuestBoard();
+}
+
+function renderQuestBoard() {
+  const el = document.getElementById('questBoard');
+  if (!el) return;
+  if (currentQTab === 'done') {
+    const doneAll = Object.entries(S.quests).flatMap(([t,arr]) => arr.filter(q => q.done).map(q => ({...q, _type:t})));
+    el.innerHTML = doneAll.length === 0
+      ? '<div style="text-align:center;color:var(--text3);padding:20px;font-size:0.75rem">Chưa có quest nào hoàn thành</div>'
+      : doneAll.map(q => questCard(q, q._type, false)).join('');
+    return;
+  }
+  const quests = S.quests[currentQTab] || [];
+  el.innerHTML = quests.length === 0
+    ? `<div style="text-align:center;color:var(--text3);padding:20px;font-size:0.75rem">Không có quest nào. Thêm quest mới!</div>`
+    : quests.map(q => questCard(q, currentQTab, false)).join('');
+}
+
+function renderSkills() {
+  const el = document.getElementById('skillList');
+  if (!el) return;
+  el.innerHTML = S.skills.map(s => `
+    <div class="skill-item">
+      <div class="skill-icon-box" style="background:${s.bg||'#EEF4FF'}">${s.icon}</div>
+      <div class="skill-body">
+        <div class="skill-top">
+          <div class="skill-name">${s.name}</div>
+          <div class="skill-lv-badge">LV ${s.lv}</div>
+        </div>
+        <div class="skill-bar-bg"><div class="skill-bar-fill" style="width:${Math.round(s.xp/s.maxXp*100)}%;background:linear-gradient(90deg,${s.color||'var(--primary)'},#A78BFA)"></div></div>
+        <div class="skill-xp-text">${s.xp} / ${s.maxXp} XP</div>
+      </div>
+      <div class="skill-plus" onclick="promptSkillXP('${s.id}')">+</div>
+    </div>
+  `).join('');
+}
+
+function renderAchievements() {
+  const el = document.getElementById('achieveGrid');
+  if (!el) return;
+  el.innerHTML = S.achievements.map(a => `
+    <div class="achieve-item ${a.unlocked?'unlocked':'locked'}">
+      <div class="achieve-icon">${a.icon}</div>
+      <div class="achieve-name">${a.name}</div>
+      <div class="achieve-hint">${a.desc}</div>
+      ${a.unlocked ? '' : `<div style="font-size:0.55rem;color:var(--text3);margin-top:2px">+${a.xpBonus} XP khi unlock</div>`}
+    </div>
+  `).join('');
+}
+
+function renderFunds() {
+  const el = document.getElementById('fundList');
+  if (!el) return;
+  el.innerHTML = S.funds.map((f,i) => {
+    const pct = Math.min(100, Math.round(f.current / f.target * 100));
+    return `<div class="fund-item">
+      <div class="fund-top">
+        <div class="fund-name">${f.name}</div>
+        <div class="fund-amounts">
+          <div class="fund-cur">${fmtMoney(f.current)}</div>
+          <div class="fund-target-text">/ ${fmtMoney(f.target)}</div>
+        </div>
+      </div>
+      <div class="fund-bar-bg"><div class="fund-bar-fill" style="width:${pct}%;background:linear-gradient(90deg,${f.colors[0]},${f.colors[1]})"></div></div>
+      <div class="fund-note">${f.note} · ${pct}%</div>
+      <div class="fund-input-row">
+        <input type="number" id="fi_${i}" placeholder="+/- tiền (VND)" step="100000">
+        <button onclick="updateFund(${i})">+ / -</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Budget stats
+  const bs = document.getElementById('budgetStats');
+  if (bs) bs.innerHTML = `
+    <div class="stat-row"><span class="stat-k">Thu nhập intern (ước tính)</span><span class="stat-v">~3,000,000đ</span></div>
+    <div class="stat-row"><span class="stat-k">Thu nhập PT Tiếng Anh</span><span class="stat-v">~3,000,000đ</span></div>
+    <div class="stat-row"><span class="stat-k">Chi tiêu tối thiểu/tháng</span><span class="stat-v">~3,500,000đ</span></div>
+    <div class="stat-row"><span class="stat-k">Tiết kiệm được/tháng</span><span class="stat-v" style="color:var(--green)">~2,500,000đ</span></div>
+    <div class="stat-row"><span class="stat-k">Tháng đủ quỹ dự phòng</span><span class="stat-v">${Math.ceil((42000000 - S.funds[1].current) / 2500000)} tháng nữa</span></div>
+  `;
+}
+
+function renderGrad() {
+  const el = document.getElementById('gradList');
+  if (!el) return;
+  const done = S.gradItems.filter(g=>g.done).length;
+  el.innerHTML = S.gradItems.map((g,i) => `
+    <div class="grad-item ${g.done?'done':''}" onclick="toggleGrad(${i})">
+      <div class="grad-checkbox">${g.done?'✓':''}</div>
+      <div class="grad-text">${g.text}</div>
+    </div>
+  `).join('') + `<div style="font-size:0.68rem;color:var(--text2);margin-top:8px;text-align:right">${done}/${S.gradItems.length} hoàn thành</div>`;
+}
+
+function renderLog() {
+  const el = document.getElementById('activityLog');
+  if (!el) return;
+  el.innerHTML = S.log.slice(0,30).map(e => `
+    <div class="log-entry">
+      <span class="log-ts">${new Date(e.ts).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}</span>
+      <span class="log-msg">${e.message}</span>
+      ${e.xpDelta ? `<span class="log-xp">${e.xpDelta > 0 ? '+' : ''}${e.xpDelta}</span>` : ''}
+    </div>
+  `).join('') || '<div style="color:var(--text3);font-size:0.7rem;padding:8px">Chưa có hoạt động nào.</div>';
+}
+
+function renderAdmin() {
+  // Rules form
+  const r = S.rules;
+  document.getElementById('rule_penalty_hp').value  = r.penaltyHp;
+  document.getElementById('rule_perfect_xp').value  = r.perfectDayXp;
+  document.getElementById('rule_streak7_xp').value  = r.streak7Xp;
+  document.getElementById('rule_boss_hp').value     = r.bossMaxHp;
+
+  // Rules list
+  document.getElementById('rulesList').innerHTML = `
+    <div class="rule-item"><span class="rule-name">Phạt bỏ quest</span><span class="rule-val">-${r.penaltyHp} HP / quest</span></div>
+    <div class="rule-item"><span class="rule-name">Perfect day bonus</span><span class="rule-val">+${r.perfectDayXp} XP</span></div>
+    <div class="rule-item"><span class="rule-name">Streak 7 ngày</span><span class="rule-val">+${r.streak7Xp} XP</span></div>
+    <div class="rule-item"><span class="rule-name">Boss HP tuần</span><span class="rule-val">${r.bossMaxHp} tasks</span></div>
+    <div class="rule-item"><span class="rule-name">Streak mất</span><span class="rule-val">-(streak × 5) XP</span></div>
+  `;
+
+  // Sheets URL
+  document.getElementById('sheetsUrl').value = S.sheetsUrl || '';
+
+  // Admin stats
+  const totalDone = Object.values(S.quests).flat().filter(q=>q.done).length;
+  const totalQ    = Object.values(S.quests).flat().length;
+  const totalSkillLv = S.skills.reduce((a,s)=>a+s.lv,0);
+  document.getElementById('adminStats').innerHTML = `
+    <div class="stat-row"><span class="stat-k">Total Level</span><span class="stat-v">LV ${S.level}</span></div>
+    <div class="stat-row"><span class="stat-k">Total XP earned</span><span class="stat-v">${S.xp} XP</span></div>
+    <div class="stat-row"><span class="stat-k">Streak hiện tại</span><span class="stat-v">🔥 ${S.streak} ngày</span></div>
+    <div class="stat-row"><span class="stat-k">Quests hoàn thành</span><span class="stat-v">${totalDone} / ${totalQ}</span></div>
+    <div class="stat-row"><span class="stat-k">Tổng Skill Level</span><span class="stat-v">${totalSkillLv}</span></div>
+    <div class="stat-row"><span class="stat-k">Achievements</span><span class="stat-v">${S.achievements.filter(a=>a.unlocked).length} / ${S.achievements.length}</span></div>
+  `;
+}
+
+// =========================================================
+// MAIN RENDER DISPATCH
+// =========================================================
+function renderAll() {
+  renderTopBar();
+  renderResources();
+  renderLossWarning();
+  renderBoss();
+  renderTodayQuests();
+  renderGrad();
+  renderLog();
+  renderQuestBoard();
+  renderSkills();
+  renderAchievements();
+  renderFunds();
+  renderAdmin();
+}
+
+// =========================================================
+// NAVIGATION
+// =========================================================
+function switchPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`page-${name}`).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (name === 'quests') renderQuestBoard();
+  if (name === 'admin') renderAdmin();
+}
+
+// =========================================================
+// MODAL
+// =========================================================
+function openModal(id) {
+  if (id === 'resModal') {
+    document.getElementById('rm_hp').value  = S.resources.hp;
+    document.getElementById('rm_en').value  = S.resources.en;
+    document.getElementById('rm_mon').value = S.resources.mon;
+    document.getElementById('rm_time').value= S.resources.time;
+  }
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+});
+
+// =========================================================
+// TOAST
+// =========================================================
+function toast(msg, type='info') {
+  const area = document.getElementById('toastArea');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  area.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
+}
+
+// =========================================================
+// INIT
+// =========================================================
+renderAll();
+
+// Auto-check streak on load
+checkStreak();
+
+// Service Worker registration (PWA)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
