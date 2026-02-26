@@ -1,4 +1,4 @@
-const CACHE = 'liferp-v2';
+const CACHE = 'liferp-v3';
 const ASSETS = ['./index.html', './manifest.json'];
 
 self.addEventListener('install', e => {
